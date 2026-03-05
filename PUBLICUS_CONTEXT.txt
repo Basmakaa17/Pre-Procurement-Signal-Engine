@@ -1,0 +1,71 @@
+Publicus — Technical Assessment Brief
+About Publicus
+Publicus is a Canadian procurement intelligence platform. We aggregate, structure, and deliver government procurement data to help businesses win more government contracts and to help governments buy more effectively.
+Government procurement data is publicly available but practically inaccessible. It's scattered across 200+ portals at the federal, provincial, and municipal level in Canada, posted in inconsistent formats, buried in PDFs, and siloed by jurisdiction. No one has aggregated, structured, and made this data truly usable.
+Our customers are businesses that sell to the Canadian government — IT consulting firms, management consultancies, engineering companies, cybersecurity providers, and more. They range from 1-person shops to 1,000+ employee enterprises. Their core pain is that finding, qualifying, and responding to government opportunities is manual, fragmented, and time-consuming.
+What we do today: We aggregate live government opportunities (RFPs, RFIs, RFQs) from 200+ portals, match them to users with AI, and deliver them through personalized email briefings, semantic search, and a shared pipeline tracker.
+Where we're going: We're expanding into historical procurement data — award notices, spending trends, vendor intelligence — and into new data domains like grants. The goal is to become the definitive source of structured government data in Canada.
+The Assessment
+Your Task
+Build a functioning prototype that uses publicly available Canadian government grants data to create something useful for businesses that work with government.
+Grants data is available from sources like:
+Open Canada — Grants & Contributions
+Innovation Canada — Business Benefits Finder
+Provincial grant portals and databases
+Any other publicly accessible grants data you find
+You choose the scope. You choose the approach. The only requirements are below. You can ultimately integrate any additional data sources you want.
+What We're Looking For
+1. Problem-first thinking
+Don't start with the technology. Start with: who has a problem, and what is it? Your prototype should solve a real problem for either our existing customers (businesses selling to government) or a new audience we could serve. Show us you understand how a grants product creates value — not just that you can build one.
+2. Data pipeline quality
+This is the most important part. Government data is messy — inconsistent formats, missing fields, duplicates, buried in PDFs, spread across portals with different schemas. Cleaning and standardizing this data is genuinely hard and is the core of what we do.
+We want to see:
+How you acquire and ingest raw grants data
+How you handle inconsistencies, missing values, and format differences
+How you structure and normalize data from different sources into something usable
+If you use LLMs for classification or extraction: how you validate their outputs and handle errors
+The rules, heuristics, or systems you build to ensure data quality
+Building a nice UI on top of clean data is the easy part. Getting the data clean is the hard part. Show us your approach.
+3. Creativity
+We don't want a generic search bar, list view, or plain LLM wrapper. Surprise us with something differentiated. Creativity is a superpower right now — it's what separates building something forgettable from building something people actually want to use.
+4. A working prototype
+This needs to actually function — not a wireframe, not a slide deck, not a design mockup. It should be something we could conceivably start using to create value, even if it's rough around the edges. It doesn't need to be production-ready, but it needs to be real. Host the prototype somewhere accessible, such as Vercel or Railway, so we can actually use it.
+5. Strategic awareness
+Show us you understand how this fits into a broader business. Who would use this? How would it help them? How does grants data connect to the broader world of government procurement? You don't need a business plan — just evidence that you're thinking beyond the code.
+6. Grounded in business outcomes
+Your prototype needs to connect to a real business outcome. How does this create value for Publicus? Some possibilities:
+Customer acquisition — Does this attract new users to the platform? Is it a lead generation tool?
+Usage & retention — Does this give existing customers a reason to come back more often or engage more deeply?
+Revenue expansion — Could this justify charging more, or create an upsell path?
+Market positioning — Does this open a new audience or strengthen our position in an existing one?
+You don't need to pick from this list — make a case for whatever outcome you believe in. But you do need to make the case. "This is cool technology" is not enough. We want to hear: here's who uses it, here's the problem it solves for them, and here's why that matters for the business.
+Given that this is a standalone prototype (not integrated into our platform), outcomes like lead generation and customer acquisition are natural fits — but genuinely, argue for whatever you think is strongest.
+Live Demo
+You'll demo your prototype live to our team and walk us through your decisions. We'll ask questions — about the data pipeline, the product choices, and how you'd take it further. Come prepared to show it working and to talk through the thinking behind it.
+Constraints
+Time: You should be able to build something useful in under 5 days of part-time work. We know you have a job — the goal is that someone focused could knock this out in roughly a day of dedicated time, but we're giving flexibility.
+Stack: Use whatever you want.
+Deliverable: A functioning prototype with a brief writeup (1-2 pages) covering:
+What problem you're solving and for whom
+How this creates value for the business (acquisition, usage, revenue, or otherwise)
+Your approach to data acquisition and cleaning
+Key decisions you made and why
+What you'd do next with more time
+What We'll Evaluate
+Area
+What we're looking at
+Data pipeline
+How you handled messy government data — ingestion, cleaning, normalization, validation
+Problem understanding
+Whether the thing you built solves a real problem for real users
+Business outcomes
+Can you articulate how this creates value for the business — not just the user?
+Creativity
+Originality of approach — did you think independently or just follow the obvious path?
+Execution
+Does the prototype actually work? Is it useful?
+Strategic thinking
+Do you understand how this connects to customers and business value?
+
+Questions?
+If anything is unclear, ask. We'd rather you spend time building than guessing.

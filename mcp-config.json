@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-supabase"
+      ],
+      "env": {
+        "SUPABASE_URL": "https://gvibksvhoymhodbognna.supabase.co",
+        "SUPABASE_SERVICE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2aWJrc3Zob3ltaG9kYm9nbm5hIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjUwNTI1NSwiZXhwIjoyMDg4MDgxMjU1fQ.COKtK30bOKQZJ-u3tS6f1Qi8WyqhLRdY6YUbTv-AqNY"
+      }
+    }
+  }
+}
