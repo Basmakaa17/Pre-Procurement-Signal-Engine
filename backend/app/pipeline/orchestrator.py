@@ -220,7 +220,7 @@ class PipelineOrchestrator:
                         with open('/Users/basma.kaanane/Documents/mobile app /Pre-Procurement-Signal-Engine/.cursor/debug.log', 'a') as f:
                             f.write(json.dumps({"runId":"debug","hypothesisId":"B","location":"orchestrator.py:161","message":"Before _clean_grants","data":{"raw_grants_count":len(raw_grants),"source":source},"timestamp":int(datetime.now().timestamp()*1000)})+"\n")
                         # #endregion
-                        cleaned_grants = await self._clean_grants(raw_grants, source)
+                        cleaned_grants = await self._clean_grants(raw_grants, source, run_id=run_id)
                         # #region agent log
                         with open('/Users/basma.kaanane/Documents/mobile app /Pre-Procurement-Signal-Engine/.cursor/debug.log', 'a') as f:
                             f.write(json.dumps({"runId":"debug","hypothesisId":"B","location":"orchestrator.py:163","message":"After _clean_grants","data":{"cleaned_grants_count":len(cleaned_grants),"raw_grants_count":len(raw_grants),"source":source},"timestamp":int(datetime.now().timestamp()*1000)})+"\n")
@@ -258,12 +258,16 @@ class PipelineOrchestrator:
                         ) - quarantined_count
                         records_with_issues = max(0, records_with_issues)  # Ensure non-negative
                         
+                        # Calculate total processed (new + existing) for accurate progress tracking
+                        total_processed = records_new + records_existing
+                        
                         # Update status: saving completed
+                        # Use total_processed for records_cleaned to reflect all processed grants
                         self._update_pipeline_run(
                             run_id,
                             source,
                             len(raw_grants),
-                            saved_count,  # Use saved_count (after dedup)
+                            total_processed,  # Use total_processed instead of saved_count
                             quarantined_count,
                             0,  # Not classified yet
                             "running",
@@ -274,7 +278,7 @@ class PipelineOrchestrator:
                             records_enriched=records_enriched,
                         )
                         
-                        # Step 4: Classify (if requested) - only classify saved grants
+                        # Step 4: Classify (if requested) - classify ALL unclassified grants, not just new ones
                         classified_count = 0
                         if run_classification:
                             # Update status to show we're classifying - keep as "running"
@@ -282,7 +286,7 @@ class PipelineOrchestrator:
                                 run_id,
                                 source,
                                 len(raw_grants),
-                                saved_count,
+                                total_processed,  # Use total_processed for consistency
                                 quarantined_count,
                                 0,  # Not classified yet
                                 "running",  # Keep as running during classification
@@ -567,7 +571,7 @@ class PipelineOrchestrator:
         return text if len(text) > 1 else None
     
     async def _clean_grants(
-        self, raw_grants: list[RawGrantRecord], source: str, cleaning_report: CleaningReport = None
+        self, raw_grants: list[RawGrantRecord], source: str, cleaning_report: CleaningReport = None, run_id: Optional[str] = None
     ) -> list[dict]:
         """
         Clean and normalize grant records
@@ -692,11 +696,16 @@ class PipelineOrchestrator:
                 if should_quarantine_record:
                     # Send to quarantine queue
                     try:
-                        self.supabase.table("quarantine_queue").insert({
+                        quarantine_data = {
                             "source": source,
                             "raw_data": raw.raw_data,
                             "failure_reasons": [quarantine_reason] + all_flags,
-                        }).execute()
+                            "quarantine_reason": quarantine_reason,
+                        }
+                        # Add pipeline_run_id if available (passed from orchestrator)
+                        if run_id:
+                            quarantine_data["pipeline_run_id"] = run_id
+                        self.supabase.table("quarantine_queue").insert(quarantine_data).execute()
                         cleaning_report.total_quarantined += 1
                         logger.debug(f"Quarantined record: {quarantine_reason}")
                     except Exception as e:
@@ -1093,11 +1102,15 @@ class PipelineOrchestrator:
                     with open('/Users/basma.kaanane/Documents/mobile app /Pre-Procurement-Signal-Engine/.cursor/debug.log', 'a') as f:
                         f.write(json.dumps({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1001","message":"Quarantining grant","data":{"quarantine_reason":quarantine_reason,"quality_flags":quality_flags,"quarantined_count":quarantined_count+1},"timestamp":int(datetime.now().timestamp()*1000)})+"\n")
                     # #endregion
-                    self.supabase.table("quarantine_queue").insert({
+                    quarantine_data = {
                         "source": source,
                         "raw_data": grant.get("raw_data", {}),
                         "failure_reasons": [quarantine_reason] + quality_flags,
-                    }).execute()
+                        "quarantine_reason": quarantine_reason,
+                    }
+                    if run_id:
+                        quarantine_data["pipeline_run_id"] = run_id
+                    self.supabase.table("quarantine_queue").insert(quarantine_data).execute()
                     quarantined_count += 1
                     continue
                 
@@ -1231,11 +1244,15 @@ class PipelineOrchestrator:
                         f.write(json.dumps({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1057","message":"Quarantining due to insert error","data":{"error":str(insert_error)[:500]},"timestamp":int(datetime.now().timestamp()*1000)})+"\n")
                     # #endregion
                     try:
-                        self.supabase.table("quarantine_queue").insert({
+                        quarantine_data = {
                             "source": source,
                             "raw_data": grant.get("raw_data", {}),
                             "failure_reasons": [str(insert_error)],
-                        }).execute()
+                            "quarantine_reason": "database_insert_error",
+                        }
+                        if run_id:
+                            quarantine_data["pipeline_run_id"] = run_id
+                        self.supabase.table("quarantine_queue").insert(quarantine_data).execute()
                         quarantined_count += 1
                     except Exception as quarantine_error:
                         # #region agent log
@@ -1402,12 +1419,13 @@ class PipelineOrchestrator:
                     "procurement_signal_score"
                 ).is_("funding_theme", "null").eq(
                     "is_quarantined", False
-                ).limit(CLASSIFY_BATCH).execute()
+                ).order("id").range(offset, offset + CLASSIFY_BATCH - 1).execute()
 
                 if not score_resp.data:
                     break
 
                 batch_count = len(score_resp.data)
+                logger.info(f"[SIGNAL] Processing batch: offset={offset}, count={batch_count}")
                 for g in score_resp.data:
                     # Skip if already scored
                     if g.get("procurement_signal_score") is not None:
@@ -1483,6 +1501,7 @@ class PipelineOrchestrator:
                     except Exception as e:
                         logger.warning(f"[SIGNAL] Error updating score for {g['id']}: {e}")
 
+                offset += batch_count
                 if batch_count < CLASSIFY_BATCH:
                     break
 
@@ -1498,6 +1517,7 @@ class PipelineOrchestrator:
             # ════════════════════════════════════════════════════════════════
             total_updated = 0
             classifier = HybridClassifier(use_llm_fallback=True)
+            classify_offset = 0
 
             while True:
                 response = self.supabase.table("grant_records").select(
@@ -1506,13 +1526,15 @@ class PipelineOrchestrator:
                     "agreement_type, raw_data, procurement_signal_category"
                 ).is_("funding_theme", "null").eq(
                     "is_quarantined", False
-                ).limit(CLASSIFY_BATCH).execute()
+                ).in_("procurement_signal_category", ["high", "medium"]).order("id").range(
+                    classify_offset, classify_offset + CLASSIFY_BATCH - 1
+                ).execute()
 
                 if not response.data:
                     break
 
                 batch_size = len(response.data)
-                logger.info(f"[CLASSIFY] Processing batch of {batch_size} unclassified records")
+                logger.info(f"[CLASSIFY] Processing batch: offset={classify_offset}, count={batch_size}")
 
                 # Convert to CleanedGrantRecord
                 grants = []
@@ -1611,6 +1633,7 @@ class PipelineOrchestrator:
                         logger.warning(f"Error updating classification: {e}")
 
                 total_updated += batch_updated
+                classify_offset += batch_size
                 logger.info(
                     f"[CLASSIFY] Batch done: {batch_updated}/{batch_size} updated "
                     f"(total so far: {total_updated})"

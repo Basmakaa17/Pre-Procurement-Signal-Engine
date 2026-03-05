@@ -188,7 +188,174 @@ DEPT_CANONICAL = {
     "canada revenue agency": "Canada Revenue Agency",
     "cra": "Canada Revenue Agency",
     "arc": "Canada Revenue Agency",
-    "agence du revenu du canada": "Canada Revenue Agency"
+    "agence du revenu du canada": "Canada Revenue Agency",
+    
+    # Canadian Heritage
+    "canadian heritage": "Canadian Heritage",
+    "patrimoine canadien": "Canadian Heritage",
+    "pch": "Canadian Heritage",
+    
+    # Canadian Institutes of Health Research
+    "canadian institutes of health research": "Canadian Institutes of Health Research",
+    "cihr": "Canadian Institutes of Health Research",
+    "instituts de recherche en santé du canada": "Canadian Institutes of Health Research",
+    "irsc": "Canadian Institutes of Health Research",
+    
+    # Social Sciences and Humanities Research Council
+    "social sciences and humanities research council of canada": "Social Sciences and Humanities Research Council of Canada",
+    "sshrc": "Social Sciences and Humanities Research Council of Canada",
+    "conseil de recherches en sciences humaines": "Social Sciences and Humanities Research Council of Canada",
+    "crsh": "Social Sciences and Humanities Research Council of Canada",
+    
+    # Natural Sciences and Engineering Research Council
+    "natural sciences and engineering research council of canada": "Natural Sciences and Engineering Research Council of Canada",
+    "nserc": "Natural Sciences and Engineering Research Council of Canada",
+    "conseil de recherches en sciences naturelles et en génie": "Natural Sciences and Engineering Research Council of Canada",
+    "crsng": "Natural Sciences and Engineering Research Council of Canada",
+    
+    # Atlantic Canada Opportunities Agency
+    "atlantic canada opportunities agency": "Atlantic Canada Opportunities Agency",
+    "acoa": "Atlantic Canada Opportunities Agency",
+    "agence de promotion économique du canada atlantique": "Atlantic Canada Opportunities Agency",
+    "apeca": "Atlantic Canada Opportunities Agency",
+    
+    # Canada Economic Development for Quebec Regions
+    "canada economic development for quebec regions": "Canada Economic Development for Quebec Regions",
+    "ced": "Canada Economic Development for Quebec Regions",
+    "développement économique canada pour les régions du québec": "Canada Economic Development for Quebec Regions",
+    "déc": "Canada Economic Development for Quebec Regions",
+    
+    # Parks Canada
+    "parks canada": "Parks Canada",
+    "parcs canada": "Parks Canada",
+    "pc": "Parks Canada",
+    
+    # Department of Housing, Infrastructure and Communities
+    "department of housing, infrastructure and communities": "Department of Housing, Infrastructure and Communities",
+    "housing infrastructure and communities": "Department of Housing, Infrastructure and Communities",
+    "infrastructure and communities": "Department of Housing, Infrastructure and Communities",
+    "infc": "Department of Housing, Infrastructure and Communities",
+    
+    # Department of Justice
+    "department of justice canada": "Department of Justice Canada",
+    "justice canada": "Department of Justice Canada",
+    "ministère de la justice": "Department of Justice Canada",
+    "doj": "Department of Justice Canada",
+    
+    # Employment and Social Development Canada
+    "employment and social development canada": "Employment and Social Development Canada",
+    "esdc": "Employment and Social Development Canada",
+    "emploi et développement social canada": "Employment and Social Development Canada",
+    "edsc": "Employment and Social Development Canada",
+    
+    # Canadian Nuclear Safety Commission
+    "canadian nuclear safety commission": "Canadian Nuclear Safety Commission",
+    "cnsc": "Canadian Nuclear Safety Commission",
+    "commission canadienne de sûreté nucléaire": "Canadian Nuclear Safety Commission",
+    "ccsn": "Canadian Nuclear Safety Commission",
+    
+    # Prairies Economic Development Canada
+    "prairies economic development canada": "Prairies Economic Development Canada",
+    "prairiescan": "Prairies Economic Development Canada",
+    "développement économique canada pour les prairies": "Prairies Economic Development Canada",
+    
+    # Veterans Affairs Canada
+    "veterans affairs canada": "Veterans Affairs Canada",
+    "vac": "Veterans Affairs Canada",
+    "anciens combattants canada": "Veterans Affairs Canada",
+    "acc": "Veterans Affairs Canada",
+    
+    # Canada Water Agency
+    "canada water agency": "Canada Water Agency",
+    "cwa": "Canada Water Agency",
+    "agence canadienne de l'eau": "Canada Water Agency",
+    
+    # Federal Economic Development Agency for Northern Ontario
+    "federal economic development agency for northern ontario": "Federal Economic Development Agency for Northern Ontario",
+    "fednor": "Federal Economic Development Agency for Northern Ontario",
+    "agence fédérale de développement économique pour le nord de l'ontario": "Federal Economic Development Agency for Northern Ontario",
+    
+    # Crown-Indigenous Relations and Northern Affairs Canada
+    "crown-indigenous relations and northern affairs canada": "Crown-Indigenous Relations and Northern Affairs Canada",
+    "cirnac": "Crown-Indigenous Relations and Northern Affairs Canada",
+    "relations couronne-autochtones et affaires du nord canada": "Crown-Indigenous Relations and Northern Affairs Canada",
+    "rcaanc": "Crown-Indigenous Relations and Northern Affairs Canada",
+    
+    # Canadian Space Agency
+    "canadian space agency": "Canadian Space Agency",
+    "csa": "Canadian Space Agency",
+    "agence spatiale canadienne": "Canadian Space Agency",
+    "asc": "Canadian Space Agency",
+    
+    # Canadian Northern Economic Development Agency
+    "canadian northern economic development agency": "Canadian Northern Economic Development Agency",
+    "cannor": "Canadian Northern Economic Development Agency",
+    "agence canadienne de développement économique du nord": "Canadian Northern Economic Development Agency",
+    
+    # Public Health Agency of Canada
+    "public health agency of canada": "Public Health Agency of Canada",
+    "phac": "Public Health Agency of Canada",
+    "agence de la santé publique du canada": "Public Health Agency of Canada",
+    "aspc": "Public Health Agency of Canada",
+    
+    # Royal Canadian Mounted Police
+    "royal canadian mounted police": "Royal Canadian Mounted Police",
+    "rcmp": "Royal Canadian Mounted Police",
+    "gendarmerie royale du canada": "Royal Canadian Mounted Police",
+    "grc": "Royal Canadian Mounted Police",
+    
+    # Correctional Service of Canada
+    "correctional service of canada": "Correctional Service of Canada",
+    "csc": "Correctional Service of Canada",
+    "service correctionnel du canada": "Correctional Service of Canada",
+    "scc": "Correctional Service of Canada",
+    
+    # Pacific Economic Development Canada
+    "pacific economic development canada": "Pacific Economic Development Canada",
+    "pacdevcan": "Pacific Economic Development Canada",
+    "développement économique canada pour le pacifique": "Pacific Economic Development Canada",
+    
+    # Women and Gender Equality Canada
+    "women and gender equality canada": "Women and Gender Equality Canada",
+    "wage": "Women and Gender Equality Canada",
+    "femmes et égalité des genres canada": "Women and Gender Equality Canada",
+    "fegc": "Women and Gender Equality Canada",
+    
+    # Accessibility Standards Canada
+    "accessibility standards canada": "Accessibility Standards Canada",
+    "asc": "Accessibility Standards Canada",
+    "normes d'accessibilité canada": "Accessibility Standards Canada",
+    
+    # Canada Energy Regulator
+    "canada energy regulator": "Canada Energy Regulator",
+    "cer": "Canada Energy Regulator",
+    "régie de l'énergie du canada": "Canada Energy Regulator",
+    
+    # Federal Economic Development Agency for Southern Ontario
+    "federal economic development agency for southern ontario": "Federal Economic Development Agency for Southern Ontario",
+    "feddev": "Federal Economic Development Agency for Southern Ontario",
+    "agence fédérale de développement économique pour le sud de l'ontario": "Federal Economic Development Agency for Southern Ontario",
+    
+    # Immigration, Refugees and Citizenship Canada
+    "immigration, refugees and citizenship canada": "Immigration, Refugees and Citizenship Canada",
+    "ircc": "Immigration, Refugees and Citizenship Canada",
+    "immigration, réfugiés et citoyenneté canada": "Immigration, Refugees and Citizenship Canada",
+    
+    # Canadian Food Inspection Agency
+    "canadian food inspection agency": "Canadian Food Inspection Agency",
+    "cfia": "Canadian Food Inspection Agency",
+    "agence canadienne d'inspection des aliments": "Canadian Food Inspection Agency",
+    "acia": "Canadian Food Inspection Agency",
+    
+    # Department of Finance Canada
+    "department of finance canada": "Department of Finance Canada",
+    "finance canada": "Department of Finance Canada",
+    "ministère des finances": "Department of Finance Canada",
+    
+    # Polar Knowledge Canada
+    "polar knowledge canada": "Polar Knowledge Canada",
+    "polar": "Polar Knowledge Canada",
+    "savoir polaire canada": "Polar Knowledge Canada",
 }
 
 # French month translations
