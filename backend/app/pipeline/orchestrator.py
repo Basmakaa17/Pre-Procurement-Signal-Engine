@@ -1389,10 +1389,10 @@ class PipelineOrchestrator:
                 score_resp = self.supabase.table("grant_records").select(
                     "id, agreement_type, recipient_name, recipient_type, "
                     "amount_cad, program_name, description, award_date, raw_data, "
-                    "procurement_signal_score"
+                    "procurement_signal_score, issuer_canonical"
                 ).is_("funding_theme", "null").eq(
                     "is_quarantined", False
-                ).order("id").range(offset, offset + CLASSIFY_BATCH - 1).execute()
+                ).order("id").limit(CLASSIFY_BATCH).offset(offset).execute()
 
                 if not score_resp.data:
                     break
@@ -1526,9 +1526,9 @@ class PipelineOrchestrator:
                     "agreement_type, raw_data, procurement_signal_category"
                 ).is_("funding_theme", "null").eq(
                     "is_quarantined", False
-                ).in_("procurement_signal_category", ["high", "medium"]).order("id").range(
-                    classify_offset, classify_offset + CLASSIFY_BATCH - 1
-                ).execute()
+                ).in_("procurement_signal_category", ["high", "medium"]).order("id").limit(
+                    CLASSIFY_BATCH
+                ).offset(classify_offset).execute()
 
                 if not response.data:
                     break
