@@ -270,7 +270,7 @@ body {
 }
 
 .pipe-detail.open {
-  max-height: 200px;
+  max-height: 400px;
   margin-top: 10px;
 }
 

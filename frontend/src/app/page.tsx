@@ -151,90 +151,90 @@ const HOW_STEPS = [
   {
     icon: <IconDatabase className="w-7 h-7 text-[#634086]" />,
     title: "Ingest & Clean",
-    desc: "Fetch grants from Open Canada via CKAN datastore_search sorted newest-first with date-based early stop. Deep-clean every record: HTML stripping, department canonicalization (exact + RapidFuzz at 85%), French amount/date parsing, recipient type mapping (13 categories), and 3-level deduplication (in-memory \u2192 batch DB lookup \u2192 upsert on conflict).",
+    desc: "Pull grants from Open Canada sorted newest-first, stopping as soon as we hit records we already have. Each record is cleaned: departments matched to standard names, amounts parsed from messy formats, recipients categorized, and duplicates removed at three levels before anything is saved.",
   },
   {
     icon: <IconTarget className="w-7 h-7 text-[#634086]" />,
-    title: "Score & Gate",
-    desc: "Every grant is scored on 6 dimensions: agreement type, recipient capacity gap, description keywords, NAICS code, grant duration, and amount. Grants scoring HIGH or MEDIUM proceed to classification. LOW and NOISE grants (scholarships, transfer payments, individuals) are marked \u201CNot Classified\u201D and skip the LLM entirely \u2014 saving 40\u201360% of API costs.",
+    title: "Score & Filter",
+    desc: "Every grant is scored across six factors: type of agreement, who received it, what it\u2019s for, industry code, how long it lasts, and how much money is involved. Only grants with a real chance of generating procurement move forward. The rest are filtered out before any expensive AI classification.",
   },
   {
     icon: <IconCpu className="w-7 h-7 text-[#634086]" />,
     title: "Classify",
-    desc: "Only HIGH/MEDIUM-scored grants reach the 4-pass hybrid classifier: department rules (0.90) \u2192 keyword rules (0.80) \u2192 auto-learned keywords from prior LLM runs (0.75) \u2192 LLM fallback. New LLM results become keyword rules for next time. Business relevance is recalculated with the classified theme. Outputs locked to 12-category taxonomy.",
+    desc: "Grants that pass scoring go through a four-step classifier. It tries simple rules first (department name, keywords, patterns learned from past runs) and only calls the LLM for the ones it can\u2019t figure out. Each time the LLM classifies something new, those patterns are saved so it won\u2019t need the LLM next time.",
   },
   {
     icon: <IconRadar className="w-7 h-7 text-[#634086]" />,
     title: "Predict & Signal",
-    desc: "RFP Prediction Engine maps each classified grant to specific RFP types (~55 types across 12 themes) with timelines, likelihood, and target bidders \u2014 predictions stored per-grant in the database. Signal Detection clusters grants by theme \u00D7 region and applies lag models to forecast procurement windows 3\u201318 months out.",
+    desc: "Each classified grant gets mapped to specific RFP types it\u2019s likely to produce \u2014 with predicted timelines and the kinds of companies that should bid. Grants are then grouped into procurement signals by theme and region to surface broader spending trends.",
   },
 ];
 
 const PIPELINE_STAGES = [
   {
     icon: <IconDatabase className="w-6 h-6 text-[#634086]" />,
-    name: "Source Adapters",
+    name: "Data Ingestion",
     detail:
-      "5 adapter types: Open Canada (primary), Innovation Canada, Proactive Disclosure, CSV File, and Mock. Open Canada uses CKAN datastore_search sorted by agreement_start_date DESC with 10K-record pages and date-based early stop. Race-condition guard detects dataset shifts mid-run. Incremental mode via pipeline_source_metadata.",
+      "Five source adapters (Open Canada is the primary one). Fetches grants sorted newest-first in large pages. Stops automatically once it reaches records older than the cutoff date. Tracks when each source was last fetched so re-runs only grab new data.",
   },
   {
     icon: <IconFilter className="w-6 h-6 text-[#634086]" />,
     name: "Data Cleaning",
     detail:
-      'Deep text cleaning (HTML stripping, entity decoding, artifact removal), amount parsing ("$1,234,567", French "250 000", "1.2M", accounting negatives), French date handling (janvier, f\u00E9vrier\u2026), null placeholder detection ("0001-01-01T00:00:00Z"), fiscal year extraction (April 1\u2192March 31). Every function returns (value, flags) \u2014 never raises.',
+      'Strips HTML and encoding artifacts. Parses amounts from multiple formats: "$1,234,567", French spacing "250 000", shorthand "1.2M", accounting negatives. Handles French dates (janvier, f\u00E9vrier...). Extracts fiscal year (April\u2013March cycle). Every function returns a value plus quality flags \u2014 never crashes the pipeline.',
   },
   {
     icon: <IconBuilding className="w-6 h-6 text-[#634086]" />,
     name: "Dept. & Recipient",
     detail:
-      "Department canonicalization: exact lookup against ~50 bilingual variants, then RapidFuzz at 85% cutoff. Recipient: Unicode NFKD normalization, legal suffix stripping (Inc., Ltd., Corp.). 13 recipient types mapped (municipal_government, crown_corporation, hospital_health, etc.) with name-based inference when no explicit type exists.",
+      "Matches department names against ~50 known bilingual variants, with fuzzy matching as fallback. Normalizes recipient names (strips legal suffixes like Inc., Ltd.) and maps them into 13 categories: municipality, crown corporation, hospital, university, etc. When no explicit type is provided, it infers from the name.",
   },
   {
     icon: <IconGitMerge className="w-6 h-6 text-[#634086]" />,
-    name: "3-Level Dedup",
+    name: "Deduplication",
     detail:
-      "Level 1: In-memory hash set catches duplicates within the same batch. Level 2: Batch DB lookup (50 at a time) avoids N+1 queries against existing records. Level 3: Upsert on conflict \u2014 if a duplicate slips through (race condition), the richer record wins. Hash = SHA256(dept + normalized_recipient + amount_bucket + fiscal_year).",
+      "Three layers to catch duplicates. First: in-memory check within the current batch. Second: batch lookup against existing database records. Third: if a duplicate still slips through, the richer record wins on insert. Each record is hashed from its department, recipient, amount range, and fiscal year.",
   },
   {
     icon: <IconTarget className="w-6 h-6 text-[#634086]" />,
-    name: "Procurement Scoring",
+    name: "Scoring",
     detail:
-      "6-dimension scorer gates what reaches the LLM. (1) Agreement type \u2014 contributions +30, transfer payments hard-filtered. (2) Recipient capacity gap \u2014 municipalities/hospitals +35, individuals hard-filtered. (3) Keywords. (4) NAICS code. (5) Duration. (6) Amount. Score \u226560 = HIGH, 40\u201359 = MEDIUM, <20 = NOISE. LOW/NOISE skip LLM entirely.",
+      "Scores each grant on six factors to decide if it\u2019s worth classifying. Contributions to municipalities and hospitals score high (they hire vendors). Transfer payments to individuals are filtered as noise. Only grants scoring above the threshold move on to the classifier \u2014 the rest skip the LLM entirely.",
   },
   {
     icon: <IconCpu className="w-6 h-6 text-[#634086]" />,
-    name: "Classify & Relevance",
+    name: "Classification",
     detail:
-      "Only HIGH/MEDIUM-scored grants hit the 4-pass hybrid classifier: department rules (0.90) \u2192 keyword rules (0.80) \u2192 auto-learned keywords (0.75) \u2192 LLM fallback. After classification, business relevance is recalculated with the funding theme to produce high/medium/low relevance. New LLM results become keyword rules for next run.",
+      "Four-pass hybrid system. Tries department-based rules first, then keyword matching, then patterns learned from past LLM runs. Only calls the LLM for grants that don\u2019t match any rule. Each new LLM result is saved as a rule for future runs. Business relevance is scored after classification.",
   },
   {
     icon: <IconBolt className="w-6 h-6 text-[#634086]" />,
     name: "RFP Prediction",
     detail:
-      "~55 RFP types across 12 themes. Each classified grant gets specific predictions (e.g., cybersecurity \u2192 Penetration Testing 3\u20136mo, Security Architecture 4\u20139mo, Managed SOC 6\u201312mo) with likelihood, target bidders, and department-specific boosts. Predictions stored per-grant as JSONB in the database \u2014 ready for frontend display.",
+      "Maps each classified grant to specific RFP types it will likely produce. A cybersecurity grant might yield predictions for penetration testing (3\u20136 months), security architecture (4\u20139 months), and managed SOC (6\u201312 months). Each prediction includes timing, likelihood, and who should bid. Stored per-grant for frontend display.",
   },
 ];
 
 const DECISIONS = [
   {
-    title: "Score-then-classify: 2-phase gating",
-    what: "Phase 1 scores every grant on 6 dimensions (agreement type, recipient capacity gap, keywords, NAICS, duration, amount). Only HIGH and MEDIUM grants proceed to Phase 2 (hybrid classification + RFP prediction). LOW and NOISE grants are marked \u201CNot Classified\u201D and never touch the LLM.",
-    why: "LLM calls are expensive and slow. The 6-dimension scorer eliminates 40\u201360% of records (scholarships, transfer payments, individual grants) before an API call is ever made. It also produces an explainable signal category that the RFP predictor uses downstream. The result: zero LLM cost for noise records, and classification resources are focused on grants that actually generate procurement.",
+    title: "Score first, classify only what matters",
+    what: "Every grant is scored on six factors before any AI is involved. Only grants with a real chance of generating procurement (scored HIGH or MEDIUM) move to classification. Everything else \u2014 scholarships, transfer payments, individual benefits \u2014 is filtered out automatically.",
+    why: "AI classification is the most expensive step. Scoring first eliminates 40\u201360% of records that would never produce an RFP anyway. This keeps costs low and ensures the classifier focuses on grants that actually matter for procurement intelligence.",
   },
   {
-    title: "Datastore desc-sort over Solr or bulk CSV",
-    what: "Data ingestion uses CKAN datastore_search sorted by agreement_start_date DESC with 10K-record pages and date-based early stop. No Solr search endpoint, no bulk CSV download. Incremental mode via pipeline_source_metadata tracks last fetch time per source.",
-    why: "Solr pagination crashes at scale (page N costs as much as pages 1\u2013N). Bulk CSV wastes bandwidth on re-runs. Desc-sorted datastore_search gives newest records first, stops as soon as all records on a page fall before the cutoff, and naturally supports incremental fetching. A race-condition guard detects if the dataset total shifts mid-run.",
+    title: "Fetch newest first, stop early",
+    what: "Instead of downloading the entire grants database or using the search portal, we fetch records sorted newest-first and stop as soon as we reach data we\u2019ve already seen. Each source tracks when it was last fetched.",
+    why: "The government search portal crashes on deep pagination. Downloading everything wastes time on re-runs. Our approach gives us the newest data first and makes incremental updates fast \u2014 the second run is dramatically cheaper than the first.",
   },
   {
-    title: "Quarantine over delete",
-    what: "Records that fail validation (2+ critical flags) are written to a quarantine_queue table with documented failure reasons and pipeline_run_id \u2014 never silently dropped. Records where the recipient is actually an amount string (common scraping artifact) are caught and skipped.",
-    why: "Bad records today might be processable tomorrow when cleaning logic improves. Deleting them permanently loses that signal. Quarantine with audit trail means the pipeline can be re-run with better logic and previously rejected records become usable data.",
+    title: "Quarantine, never delete",
+    what: "Records that fail validation go to a quarantine table with documented reasons \u2014 they\u2019re never silently dropped. Common issues like scrambled recipients or unparseable dates are flagged and tracked.",
+    why: "Today\u2019s bad record might be fixable tomorrow when we improve the cleaning logic. Deleting it means losing that data permanently. Quarantine with an audit trail lets us reprocess old records whenever the pipeline gets smarter.",
   },
   {
-    title: "Auto-learning hybrid classifier",
-    what: "4-pass system: department rules (0.90) \u2192 keyword rules (0.80) \u2192 auto-learned keywords from prior LLM runs (0.75) \u2192 LLM fallback. New LLM classifications are saved as keyword rules for the next run. After classification, business relevance is recalculated with the theme, and per-grant RFP predictions are generated and stored as JSONB.",
-    why: "Each LLM call costs money and adds latency. By auto-saving successful LLM classifications as keyword rules, the system gets cheaper and faster every run. Taxonomy-locking (12-category enum) prevents the LLM from inventing categories that break downstream signal detection. Storing RFP predictions per-grant means the frontend can display specific upcoming opportunities.",
+    title: "Self-improving classifier",
+    what: "The classifier tries simple rules before resorting to the LLM. When the LLM does classify something, those patterns are automatically saved as rules for next time. The system gets smarter with every run.",
+    why: "Each LLM call costs money and adds latency. By learning from its own outputs, the system handles more and more grants with instant rules instead of expensive API calls. After a few runs, most grants classify without the LLM at all.",
   },
 ];
 
@@ -243,58 +243,57 @@ const FAQ_ITEMS = [
     tag: "Technical",
     tagClass: "bg-[rgba(99,64,134,0.1)] text-[#634086]",
     question: "How does the prediction model actually work?",
-    answer: `<strong>A 3-stage pipeline: procurement scoring → hybrid classification → RFP prediction. All rule-based and deterministic — no ML model — and that's intentional.</strong><br/><br/>
-      <strong>Stage 1: Procurement Signal Score (6 dimensions).</strong> Every grant is scored on: (1) Agreement type — contributions +30, "other transfer payment" hard-filtered. (2) Recipient capacity gap — municipalities, hospitals, crown corps score +35 (they must hire vendors); individuals hard-filtered. (3) Description keywords. (4) NAICS code. (5) Grant duration — &lt;6 months penalized, &gt;12 months boosted. (6) Amount — $5M+ scores +25, &lt;$50K penalized. Only HIGH (≥60) and MEDIUM (40–59) grants proceed.<br/><br/>
-      <strong>Stage 2: Classification.</strong> The 4-pass hybrid classifier assigns a funding theme and procurement category. After classification, <strong>business relevance is recalculated</strong> with the theme to determine if the grant is high/medium/low relevance for the filtered frontend views.<br/><br/>
-      <strong>Stage 3: RFP Prediction.</strong> ~55 specific RFP types across 12 themes. A cybersecurity grant → "Penetration Testing" (3–6 mo), "Security Architecture" (4–9 mo), "Managed SOC" (6–12 mo). Each prediction has likelihood, target bidder types, and department-specific procurement boosts (e.g., Shared Services Canada 1.3×). Predictions are stored per-grant as JSONB in the database.<br/><br/>
-      The architecture is designed so that once confirmed grant→RFP pairs accumulate from Publicus's existing data, the rule weights can be replaced with learned coefficients — same features, same output schema, better accuracy.`,
+    answer: `<strong>Three stages, all rule-based and deterministic. No ML model \u2014 and that's intentional.</strong><br/><br/>
+      <strong>Stage 1 \u2014 Scoring.</strong> Every grant is scored on six factors: what type of agreement it is, who received the money (municipalities and hospitals hire vendors; individuals don\u2019t), what the description says, industry code, how long the grant lasts, and how large it is. Grants that clearly won\u2019t produce RFPs (scholarships, transfer payments) are filtered out here.<br/><br/>
+      <strong>Stage 2 \u2014 Classification.</strong> Grants that pass scoring are assigned a funding theme (like "Cybersecurity Modernization" or "Clean Energy Infrastructure") using a hybrid classifier that tries rules first and only calls the LLM when needed. Business relevance is also scored at this stage.<br/><br/>
+      <strong>Stage 3 \u2014 RFP Prediction.</strong> Based on the theme, the engine predicts specific RFP types. For example, a cybersecurity grant typically produces penetration testing RFPs in 3\u20136 months, security architecture in 4\u20139 months, and managed SOC contracts in 6\u201312 months. Each prediction includes timing, likelihood, and the types of companies that should bid.<br/><br/>
+      Once Publicus accumulates confirmed grant\u2192RFP pairs, the rule weights can be replaced with learned ones \u2014 same structure, better accuracy.`,
   },
   {
     tag: "Technical",
     tagClass: "bg-[rgba(99,64,134,0.1)] text-[#634086]",
-    question: "Why not use the grants search portal directly with pagination?",
-    answer: `The grants search portal at search.open.canada.ca runs on <strong>Apache Solr</strong>. Solr's offset-based pagination requires computing and ranking all matching documents in memory up to the requested page — requesting page 10 costs as much as pages 1–10 combined. It crashes after a few pages.<br/><br/>
-      Instead we use the <strong>CKAN datastore_search API</strong> with <code>sort=agreement_start_date desc</code> and 10K-record pages. This gives us newest records first, and we <strong>stop pagination as soon as all records on a page fall before the cutoff date</strong>. A race-condition guard detects if the dataset total shifts mid-run.<br/><br/>
-      The pipeline supports <strong>5 source adapters</strong> (Open Canada, Innovation Canada, Proactive Disclosure, CSV File, and Mock for testing). For incremental runs, last fetch timestamps are tracked per source in <code>pipeline_source_metadata</code>. The minimum date is clamped to 2025-01-01 with safeguards against future dates from corrupted metadata. <strong>First run fetches everything since 2025. Every run after fetches only what's new.</strong>`,
+    question: "Why not use the grants search portal directly?",
+    answer: `The Open Canada search portal runs on <strong>Apache Solr</strong>, which gets slower the deeper you paginate \u2014 page 10 is as expensive as pages 1 through 10 combined. It effectively crashes after a few thousand records.<br/><br/>
+      Instead, we use the <strong>CKAN datastore API</strong> to fetch records sorted newest-first. We stop as soon as we hit records older than our cutoff date, so we never waste API calls on data we already have.<br/><br/>
+      The pipeline has <strong>five source adapters</strong> (Open Canada, Innovation Canada, Proactive Disclosure, CSV upload, and a mock source for testing). Each source tracks when it was last fetched. <strong>The first run pulls everything since 2025. Every run after that only grabs what\u2019s new.</strong>`,
   },
   {
     tag: "Data",
     tagClass: "bg-[#fef3c7] text-[#92400e]",
     question: "How do you handle the messiness of government data?",
-    answer: `Every cleaning function returns <code>(cleaned_value, flags)</code> — it never raises. Every record reaches the end of the pipeline with a documented quality history. Three outcomes:
+    answer: `No cleaning function is allowed to crash the pipeline. Every one returns the cleaned value plus quality flags, so every record reaches the end with a documented history. Three outcomes:
       <ul>
-        <li><strong>CLEAN:</strong> Passes all validation → written to <code>grant_records</code> with warning flags attached</li>
-        <li><strong>DIRTY:</strong> Has fixable problems (French date, M suffix, bilingual department, HTML entities) → deep-cleaned, flagged, still written to <code>grant_records</code></li>
-        <li><strong>QUARANTINE:</strong> Has 2+ critical failures → written to <code>quarantine_queue</code> with failure reasons and pipeline_run_id</li>
+        <li><strong>Clean:</strong> Passes validation and is saved with any minor flags noted</li>
+        <li><strong>Fixable:</strong> Has problems we can solve (French dates, bilingual department names, shorthand amounts) \u2014 cleaned, flagged, and still saved</li>
+        <li><strong>Quarantined:</strong> Too many critical issues \u2014 sent to a quarantine table with reasons, never silently dropped</li>
       </ul>
-      Specific challenges: bilingual department variants canonicalized via exact lookup + RapidFuzz at 85%, 13 recipient types mapped (municipal_government, crown_corporation, hospital_health, port_authority, etc.) with <strong>name-based inference</strong> when no explicit type — e.g., "City of Ottawa" inferred as municipal_government, "Dr. Jane Smith" inferred as individual. 3-level deduplication: in-memory hash set → batch DB lookup (50 at a time) → upsert on conflict. Records where the recipient is actually an amount string (common scraping artifact) are caught and skipped.`,
+      Specific things we handle: ~50 bilingual department name variants, 13 recipient categories (with name-based guessing when no type is provided \u2014 e.g., "City of Ottawa" \u2192 municipality), multiple amount formats including French spacing and accounting negatives, and three-level deduplication to prevent the same grant from appearing twice.`,
   },
   {
     tag: "Technical",
     tagClass: "bg-[rgba(99,64,134,0.1)] text-[#634086]",
-    question: "How do you validate LLM outputs so bad classifications don't corrupt signals?",
-    answer: `Five validation layers, most running before the LLM is even called:
+    question: "How do you prevent bad AI outputs from corrupting the data?",
+    answer: `Multiple layers of protection, most of which run before the AI is even involved:
       <ul>
-        <li><strong>Phase 1 gating:</strong> The 6-dimension procurement scorer hard-filters noise (transfer payments, individuals, scholarships) and only passes HIGH/MEDIUM grants to the LLM. LOW/NOISE grants are marked "Not Classified" — the LLM never sees them.</li>
-        <li><strong>Rules-first classification:</strong> The hybrid classifier tries department rules, keyword rules, and auto-learned rules before falling back to the LLM. Most grants classify without an API call at all.</li>
-        <li><strong>Taxonomy lock:</strong> <code>funding_theme</code> and <code>procurement_category</code> must match exact values in the 12-category enum. Outputs outside the enum → rejected, replaced with "Unknown" + confidence 0.1.</li>
-        <li><strong>Confidence threshold:</strong> Records with confidence below 0.70 are flagged as <code>llm_needs_review = true</code> and excluded from signal detection. Still written to DB — just not used for forecasting.</li>
-        <li><strong>Auto-learning with guard:</strong> Only LLM results with confidence ≥ 0.60 and a valid taxonomy theme get their keywords saved. Low-confidence or invalid results are never learned.</li>
-      </ul>
-      After classification, business relevance is recalculated with the funding theme, and RFP predictions are generated and stored per-grant as JSONB.`,
+        <li><strong>Pre-filter:</strong> The scoring step removes noise (scholarships, transfer payments, individual benefits) so the LLM never sees low-quality input</li>
+        <li><strong>Rules first:</strong> The classifier tries deterministic rules before calling the LLM. Most grants never need an AI call at all</li>
+        <li><strong>Strict categories:</strong> Every classification must match one of 12 predefined themes. If the LLM returns something outside that list, it\u2019s rejected</li>
+        <li><strong>Confidence gate:</strong> Low-confidence results are saved but excluded from signal detection and forecasting</li>
+        <li><strong>Guarded learning:</strong> Only high-confidence, valid LLM results get their patterns saved as rules. Bad outputs are never learned from</li>
+      </ul>`,
   },
   {
     tag: "Product",
     tagClass: "bg-[#dcfce7] text-[#166534]",
-    question: "How does this connect to Publicus's existing product?",
-    answer: `Publicus today shows users what RFPs are currently live. This layer shows what RFPs are <strong>coming in the next 3–18 months</strong> — and predicts the specific RFP types. Integration points:
+    question: "How does this connect to Publicus\u2019s existing product?",
+    answer: `Publicus today shows users what RFPs are <strong>currently live</strong>. This engine shows what RFPs are <strong>coming in the next 3\u201318 months</strong>. Integration points:
       <ul>
-        <li><strong>Per-grant RFP predictions:</strong> Every classified grant has <code>predicted_rfps</code> (JSONB array), <code>rfp_forecast_summary</code>, and <code>rfp_forecast_confidence</code> stored in the database — ready to display as "Coming Soon" opportunities with timelines and target bidders.</li>
-        <li><strong>Business relevance scoring:</strong> Each grant gets a two-pass relevance score (keyword-based + theme-enhanced). The API exposes <code>business_relevance</code>, <code>business_relevance_score</code>, and <code>business_relevance_reasons</code> for frontend filtering tabs.</li>
-        <li><strong>Taxonomy bridge:</strong> Signal procurement categories map to Publicus's existing taxonomy — signals appear inline on RFP cards as "Why this RFP exists" context</li>
-        <li><strong>Matching engine:</strong> Predicted opportunity categories feed into the existing AI matching engine as forward-looking signals — personalized recommendations factor in what's coming, not just what's live</li>
+        <li><strong>"Coming Soon" opportunities:</strong> Every classified grant has predicted RFP types, timelines, and target bidders stored in the database \u2014 ready to surface alongside live RFPs</li>
+        <li><strong>Relevance filtering:</strong> Each grant is scored for business relevance, so the frontend can show users only opportunities that matter to them</li>
+        <li><strong>Context for live RFPs:</strong> Signal data can explain <em>why</em> an RFP exists \u2014 linking it back to the underlying grant funding</li>
+        <li><strong>Smarter matching:</strong> Predicted categories can feed into Publicus\u2019s AI matching engine as forward-looking signals, so recommendations factor in what\u2019s coming, not just what\u2019s live</li>
       </ul>
-      This is additive architecture. It extends Publicus's timeline upstream without competing with what they've built.`,
+      This is additive \u2014 it extends Publicus\u2019s timeline upstream without replacing anything they\u2019ve built.`,
   },
   {
     tag: "Product",
@@ -302,19 +301,19 @@ const FAQ_ITEMS = [
     question: "What would you build next with more time?",
     answer: `In priority order:
       <ul>
-        <li><strong>Historical back-testing:</strong> Download 5 years of grants + proactive disclosure contracts. Match grant→contract pairs with 6–12 month offsets. Validate accuracy per theme. Replace the 6-dimension rule weights and RFP prediction taxonomy with empirically derived ones.</li>
-        <li><strong>Feedback loop:</strong> When a live RFP matches a per-grant prediction (type + timeline), record the actual lag and bidder outcome. Feed back into the scorer, classifier, and RFP predictor. After 18 months: validated accuracy rates no competitor can replicate.</li>
-        <li><strong>Vendor intelligence:</strong> Overlay grant recipients with contract winners from proactive disclosure. Build incumbent maps per department per procurement category — who has been winning and where.</li>
-        <li><strong>Municipal expansion:</strong> 50+ Canadian city portals are completely unserved. The grant→RFP pattern is even more direct at the municipal level — highest signal density, lowest existing coverage. The existing 5 source adapters make adding new feeds straightforward.</li>
+        <li><strong>Back-testing:</strong> Take 5 years of historical grants and match them against actual contracts that followed. Measure how accurate the predictions are per theme and replace rule-based weights with data-driven ones.</li>
+        <li><strong>Feedback loop:</strong> When a live RFP matches a prediction, record the actual timing and outcome. Over 12\u201318 months, this builds validated accuracy rates that no competitor can replicate.</li>
+        <li><strong>Vendor intelligence:</strong> Cross-reference grant recipients with contract winners to build maps of who\u2019s been winning in each category, per department.</li>
+        <li><strong>Municipal expansion:</strong> 50+ Canadian city portals are completely unserved. The grant\u2192RFP pattern is even stronger at the municipal level, and the existing source adapter architecture makes adding new feeds straightforward.</li>
       </ul>`,
   },
 ];
 
 const NEXT_STEPS = [
-  { title: "Back-test the scoring model", desc: "Download 5 years of grants + proactive disclosure contracts. Match grant→contract pairs at 6\u201312 month offsets. Validate the 6-dimension scorer and replace rule weights with empirically derived coefficients." },
-  { title: "Build the feedback loop", desc: "When a live RFP matches a predicted RFP type from the per-grant predictions, record the actual lag time and RFP type. Feed it back into the scorer, classifier, and RFP predictor. After 18 months: validated accuracy rates." },
-  { title: "Vendor intelligence layer", desc: "Overlay grant recipients with contract winners from proactive disclosure. Build incumbent maps per department per procurement category. Show who has been winning and where." },
-  { title: "Municipal expansion", desc: "50+ city portals, completely unserved. The municipal recipient scorer already flags capacity gaps \u2014 extend with municipal open data sources." },
+  { title: "Back-test with real data", desc: "Match 5 years of historical grants against actual contracts that followed. Measure prediction accuracy per theme and replace rule-based weights with data-driven ones." },
+  { title: "Close the feedback loop", desc: "When a live RFP matches a prediction, record the actual timing. Over 12\u201318 months this builds validated accuracy rates no competitor can replicate." },
+  { title: "Vendor intelligence", desc: "Cross-reference grant recipients with contract winners to build maps of who\u2019s been winning, per department, per category." },
+  { title: "Municipal expansion", desc: "50+ Canadian city portals are completely unserved. The grant-to-RFP pattern is even stronger at the municipal level." },
   { title: "Inline Publicus integration", desc: "\u201CThis RFP likely exists because of $18.4M in Ontario cybersecurity grants\u201D + predicted RFP types with timelines. Context nobody else can offer, directly on the RFP card." },
   { title: "Alert personalization", desc: "User sets sector + region \u2192 weekly signal digest with predicted RFP types. Same infrastructure as Publicus\u2019s existing email briefings. Zero new delivery infra needed." },
 ];
@@ -482,9 +481,9 @@ export default function LandingPage() {
             </h1>
             <p className="text-[#4a4a4a] text-[17px] leading-[1.75] mb-9 max-w-[480px]">
               Canadian government grants are published 3&ndash;18 months before the procurement
-              they fund. We built a pipeline that ingests, cleans, scores on 6 dimensions, classifies via
-              a self-improving hybrid engine, and predicts ~55 specific RFP types &mdash; so businesses
-              selling to government can{" "}<strong>anticipate, not just react</strong>.
+              they fund. We built a pipeline that cleans messy government data, scores each grant
+              for procurement potential, and predicts the specific RFPs that will follow &mdash; so
+              businesses selling to government can{" "}<strong>anticipate, not just react</strong>.
             </p>
             <div className="flex gap-3 items-center flex-wrap">
               <a
@@ -656,8 +655,8 @@ export default function LandingPage() {
             to actionable intelligence
           </h2>
           <p className="l-reveal text-base text-[#4a4a4a] leading-[1.75] max-w-[560px]">
-            From messy government portals to a procurement forecast in your dashboard &mdash; every
-            stage is automated, validated, and explainable.
+            From messy government portals to a procurement forecast in your dashboard.
+            Every stage is automated, auditable, and designed to get smarter over time.
           </p>
 
           <div className="l-reveal grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-[#e8e8e8] border border-[#e8e8e8] rounded-xl overflow-hidden mt-14">
@@ -749,40 +748,43 @@ export default function LandingPage() {
             <div className="p-7 border-r border-b lg:border-b-0 border-[#e8e8e8]">
               <div
                 className="text-4xl font-extrabold tracking-tight text-[#634086] leading-none mb-1.5"
-                data-count="55"
+                data-count="12"
               >
                 0
               </div>
-              <div className="text-sm font-medium text-black mb-0.5">Predicted RFP types</div>
-              <div className="text-xs text-[#717171]">Across 12 procurement themes</div>
+              <div className="text-sm font-medium text-black mb-0.5">Procurement themes</div>
+              <div className="text-xs text-[#717171]">From cybersecurity to clean energy</div>
             </div>
             <div className="p-7 border-r-0 lg:border-r border-b lg:border-b-0 border-[#e8e8e8]">
               <div
                 className="text-4xl font-extrabold tracking-tight text-[#634086] leading-none mb-1.5"
-                data-count="6"
+                data-count="55"
               >
                 0
               </div>
-              <div className="text-sm font-medium text-black mb-0.5">Scoring dimensions</div>
-              <div className="text-xs text-[#717171]">Pre-LLM procurement signal scorer</div>
+              <div className="text-sm font-medium text-black mb-0.5">RFP types predicted</div>
+              <div className="text-xs text-[#717171]">Specific opportunities per grant</div>
             </div>
             <div className="p-7 border-r border-[#e8e8e8]">
               <div
                 className="text-4xl font-extrabold tracking-tight text-[#634086] leading-none mb-1.5"
-                data-count="13"
+                data-count="5"
               >
                 0
               </div>
-              <div className="text-sm font-medium text-black mb-0.5">Recipient types mapped</div>
-              <div className="text-xs text-[#717171]">Municipal &middot; Crown Corp &middot; Hospital &middot; etc.</div>
+              <div className="text-sm font-medium text-black mb-0.5">Data sources</div>
+              <div className="text-xs text-[#717171]">Open Canada &middot; Innovation &middot; CSV &middot; more</div>
             </div>
             <div className="p-7">
-              <div className="text-4xl font-extrabold tracking-tight text-[#634086] leading-none mb-1.5">
-                3
+              <div
+                className="text-4xl font-extrabold tracking-tight text-[#634086] leading-none mb-1.5"
+                data-count="7"
+              >
+                0
               </div>
-              <div className="text-sm font-medium text-black mb-0.5">Dedup levels</div>
+              <div className="text-sm font-medium text-black mb-0.5">Pipeline stages</div>
               <div className="text-xs text-[#717171]">
-                In-memory &rarr; Batch DB &rarr; Upsert on conflict
+                Ingest &rarr; Clean &rarr; Score &rarr; Classify &rarr; Predict
               </div>
             </div>
           </div>
