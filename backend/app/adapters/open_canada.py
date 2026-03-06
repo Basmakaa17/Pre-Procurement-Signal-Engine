@@ -6,6 +6,7 @@ sort-descending pagination and early date-based stop.
 import asyncio
 import json
 import logging
+import os
 from datetime import date, datetime, timezone
 from typing import Optional, List, Dict, Any, Tuple
 
@@ -20,6 +21,23 @@ from tenacity import (
 from app.models.raw_grant import RawGrantRecord
 
 logger = logging.getLogger(__name__)
+
+# Helper function for safe debug logging (only in development)
+def _safe_debug_log(data: dict):
+    """Safely write debug log only if the file exists or can be created"""
+    debug_log_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))),
+        '.cursor',
+        'debug.log'
+    )
+    try:
+        # Create directory if it doesn't exist
+        os.makedirs(os.path.dirname(debug_log_path), exist_ok=True)
+        with open(debug_log_path, 'a') as f:
+            f.write(json.dumps(data) + "\n")
+    except (OSError, IOError, PermissionError):
+        # Silently fail in production - debug logging is optional
+        pass
 
 # Known resource ID for "Proactive Disclosure - Grants and Contributions"
 # Discovered via package_show; hardcoded as fallback so we don't need an
@@ -170,8 +188,7 @@ class OpenCanadaAdapter:
             if not page_records:
                 logger.info(f"[OpenCanada] No records on page {page_num}, done.")
                 # #region agent log
-                with open('/Users/basma.kaanane/Documents/mobile app /Pre-Procurement-Signal-Engine/.cursor/debug.log', 'a') as f:
-                    f.write(json.dumps({"runId":"debug","hypothesisId":"A","location":"open_canada.py:171","message":"Pagination stopped: empty page","data":{"page_num":page_num,"offset":offset,"all_records_count":len(all_records),"max_records":max_records},"timestamp":int(datetime.now().timestamp()*1000)})+"\n")
+                _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"open_canada.py:171","message":"Pagination stopped: empty page","data":{"page_num":page_num,"offset":offset,"all_records_count":len(all_records)
                 # #endregion
                 break
 
@@ -221,8 +238,7 @@ class OpenCanadaAdapter:
                     f"[OpenCanada] Reached date boundary ({min_date}) - all records on page {page_num} were before cutoff, stopping."
                 )
                 # #region agent log
-                with open('/Users/basma.kaanane/Documents/mobile app /Pre-Procurement-Signal-Engine/.cursor/debug.log', 'a') as f:
-                    f.write(json.dumps({"runId":"debug","hypothesisId":"A","location":"open_canada.py:218","message":"Pagination stopped: date boundary","data":{"page_num":page_num,"offset":offset,"all_records_count":len(all_records),"records_before_cutoff":records_before_cutoff,"page_records_count":len(page_records),"min_date":min_date},"timestamp":int(datetime.now().timestamp()*1000)})+"\n")
+                _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"open_canada.py:218","message":"Pagination stopped: date boundary","data":{"page_num":page_num,"offset":offset,"all_records_count":len(all_records)
                 # #endregion
                 break
 
@@ -232,16 +248,14 @@ class OpenCanadaAdapter:
                     f"[OpenCanada] Hit max_records cap ({max_records}), stopping pagination."
                 )
                 # #region agent log
-                with open('/Users/basma.kaanane/Documents/mobile app /Pre-Procurement-Signal-Engine/.cursor/debug.log', 'a') as f:
-                    f.write(json.dumps({"runId":"debug","hypothesisId":"A","location":"open_canada.py:225","message":"Pagination stopped: max_records reached","data":{"page_num":page_num,"offset":offset,"all_records_count":len(all_records),"max_records":max_records},"timestamp":int(datetime.now().timestamp()*1000)})+"\n")
+                _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"open_canada.py:225","message":"Pagination stopped: max_records reached","data":{"page_num":page_num,"offset":offset,"all_records_count":len(all_records)
                 # #endregion
                 break
 
             if len(page_records) < PAGE_SIZE:
                 logger.info(f"[OpenCanada] Last page reached (got {len(page_records)} records, less than PAGE_SIZE={PAGE_SIZE}).")
                 # #region agent log
-                with open('/Users/basma.kaanane/Documents/mobile app /Pre-Procurement-Signal-Engine/.cursor/debug.log', 'a') as f:
-                    f.write(json.dumps({"runId":"debug","hypothesisId":"A","location":"open_canada.py:229","message":"Pagination stopped: last page","data":{"page_num":page_num,"offset":offset,"all_records_count":len(all_records),"page_records_count":len(page_records),"PAGE_SIZE":PAGE_SIZE},"timestamp":int(datetime.now().timestamp()*1000)})+"\n")
+                _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"open_canada.py:229","message":"Pagination stopped: last page","data":{"page_num":page_num,"offset":offset,"all_records_count":len(all_records)
                 # #endregion
                 break
 
@@ -259,8 +273,7 @@ class OpenCanadaAdapter:
             f"(pages={page_num}, min_date={min_date})"
         )
         # #region agent log
-        with open('/Users/basma.kaanane/Documents/mobile app /Pre-Procurement-Signal-Engine/.cursor/debug.log', 'a') as f:
-            f.write(json.dumps({"runId":"debug","hypothesisId":"A","location":"open_canada.py:237","message":"Adapter fetch_grants completed","data":{"total_records":len(all_records),"pages_fetched":page_num,"min_date":min_date,"max_records":max_records,"final_offset":offset},"timestamp":int(datetime.now().timestamp()*1000)})+"\n")
+        _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"open_canada.py:237","message":"Adapter fetch_grants completed","data":{"total_records":len(all_records)
         # #endregion
         return all_records
 
