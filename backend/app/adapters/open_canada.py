@@ -255,7 +255,7 @@ class OpenCanadaAdapter:
             if len(page_records) < PAGE_SIZE:
                 logger.info(f"[OpenCanada] Last page reached (got {len(page_records)} records, less than PAGE_SIZE={PAGE_SIZE}).")
                 # #region agent log
-                _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"open_canada.py:229","message":"Pagination stopped: last page","data":{"page_num":page_num,"offset":offset,"all_records_count":len(all_records)
+                _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"open_canada.py:229","message":"Pagination stopped: last page","data":{"page_num":page_num,"offset":offset,"all_records_count":len(all_records),"page_records_count":len(page_records)},"timestamp":int(datetime.now().timestamp()*1000)})
                 # #endregion
                 break
 
