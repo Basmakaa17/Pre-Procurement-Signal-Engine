@@ -1,8 +1,11 @@
-// API Base URL - reads from environment variable with clear fallback
-// In production (Vercel), set NEXT_PUBLIC_API_URL to your Railway backend URL
-// Example: https://your-app.up.railway.app
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+// API Base URL: in production (browser on Vercel) use same-origin so Next.js rewrites to Railway.
+// NEXT_PUBLIC_API_URL must be set in Vercel at build time for rewrites to work.
+function getApiBaseUrl(): string {
+  if (typeof window !== "undefined" && !window.location.origin.includes("localhost")) {
+    return ""; // same-origin → Next.js rewrites /api/* and /health to Railway
+  }
+  return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+}
 
 // TypeScript interfaces matching backend schemas
 
@@ -209,7 +212,7 @@ export interface HealthResponse {
 // API Functions
 
 async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+  const response = await fetch(`${getApiBaseUrl()}${endpoint}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -297,7 +300,7 @@ export async function fetchGrants(params?: {
   if (params?.offset) searchParams.append("offset", String(params.offset));
 
   const query = searchParams.toString();
-  const response = await fetch(`${API_BASE_URL}/api/grants${query ? `?${query}` : ""}`);
+  const response = await fetch(`${getApiBaseUrl()}/api/grants${query ? `?${query}` : ""}`);
   
   if (!response.ok) {
     throw new Error(`API error: ${response.statusText}`);

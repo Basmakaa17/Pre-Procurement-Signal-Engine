@@ -7,10 +7,8 @@ const nextConfig = {
     // Only add rewrites if we have a production API URL
     if (apiUrl && !apiUrl.includes('localhost')) {
       return [
-        {
-          source: '/api/:path*',
-          destination: `${apiUrl}/api/:path*`,
-        },
+        { source: '/api/:path*', destination: `${apiUrl}/api/:path*` },
+        { source: '/health', destination: `${apiUrl}/health` },
       ];
     }
     

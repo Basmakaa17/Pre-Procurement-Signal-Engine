@@ -20,7 +20,7 @@ export default function Dashboard() {
   const [signalFilter, setSignalFilter] = useState<string>("all");
   const [regionFilter, setRegionFilter] = useState<string>("");
 
-  const { data: overview, isLoading: overviewLoading } = useSWR<OverviewData>(
+  const { data: overview, error: overviewError, isLoading: overviewLoading } = useSWR<OverviewData>(
     "overview",
     fetchOverview,
     { refreshInterval: 30000 }
@@ -90,6 +90,12 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-6 py-8">
+        {overviewError && (
+          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm">
+            <strong>Could not load data from the API.</strong> If this is the deployed site, set{" "}
+            <code className="bg-amber-100 px-1 rounded">NEXT_PUBLIC_API_URL</code> to your Railway backend URL in Vercel (Settings → Environment Variables) and <strong>redeploy</strong>.
+          </div>
+        )}
         {/* Stats Bar */}
         <section className="grid grid-cols-4 gap-4 mb-8">
           {overviewLoading ? (
