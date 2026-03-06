@@ -188,7 +188,7 @@ class OpenCanadaAdapter:
             if not page_records:
                 logger.info(f"[OpenCanada] No records on page {page_num}, done.")
                 # #region agent log
-                _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"open_canada.py:171","message":"Pagination stopped: empty page","data":{"page_num":page_num,"offset":offset,"all_records_count":len(all_records)
+                _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"open_canada.py:171","message":"Pagination stopped: empty page","data":{"page_num":page_num,"offset":offset,"all_records_count":len(all_records),"max_records":max_records},"timestamp":int(datetime.now().timestamp()*1000)})
                 # #endregion
                 break
 
@@ -238,7 +238,7 @@ class OpenCanadaAdapter:
                     f"[OpenCanada] Reached date boundary ({min_date}) - all records on page {page_num} were before cutoff, stopping."
                 )
                 # #region agent log
-                _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"open_canada.py:218","message":"Pagination stopped: date boundary","data":{"page_num":page_num,"offset":offset,"all_records_count":len(all_records)
+                _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"open_canada.py:218","message":"Pagination stopped: date boundary","data":{"page_num":page_num,"offset":offset,"all_records_count":len(all_records),"records_before_cutoff":records_before_cutoff,"page_records_count":len(page_records),"min_date":min_date},"timestamp":int(datetime.now().timestamp()*1000)})
                 # #endregion
                 break
 

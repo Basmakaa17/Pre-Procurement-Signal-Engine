@@ -120,7 +120,7 @@ class PipelineOrchestrator:
                         MIN_DATA_DATE = datetime(2025, 1, 1, tzinfo=timezone.utc)
                         
                         # #region agent log
-                        _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"orchestrator.py:100","message":"Checking since_date conditions","data":{"since_date":since_date.isoformat()
+                        _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"orchestrator.py:100","message":"Checking since_date conditions","data":{"since_date":since_date.isoformat() if since_date else None,"now_utc":now_utc.isoformat(),"MIN_DATA_DATE":MIN_DATA_DATE.isoformat(),"hours_lookback":hours_lookback},"timestamp":int(datetime.now().timestamp()*1000)})
                         # #endregion
                         
                         if not since_date:
@@ -133,11 +133,11 @@ class PipelineOrchestrator:
                             # Reject future dates (corrupted metadata)
                             logger.warning(f"[PIPELINE] Last fetch time is in the future ({since_date.isoformat()}), ignoring and using {hours_lookback}h lookback")
                             # #region agent log
-                            _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"orchestrator.py:112","message":"Rejecting future since_date","data":{"since_date":since_date.isoformat()
+                            _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"orchestrator.py:112","message":"Rejecting future since_date","data":{"since_date":since_date.isoformat(),"now_utc":now_utc.isoformat(),"hours_lookback":hours_lookback},"timestamp":int(datetime.now().timestamp()*1000)})
                             # #endregion
                             since_date = max(now_utc - timedelta(hours=hours_lookback), MIN_DATA_DATE)
                             # #region agent log
-                            _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"orchestrator.py:116","message":"Adjusted since_date after future date rejection","data":{"new_since_date":since_date.isoformat()
+                            _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"orchestrator.py:116","message":"Adjusted since_date after future date rejection","data":{"new_since_date":since_date.isoformat()},"timestamp":int(datetime.now().timestamp()*1000)})
                             # #endregion
                         
                         # CRITICAL FIX: Always clamp since_date to MIN_DATA_DATE to ensure we fetch 2025+ data
@@ -145,7 +145,7 @@ class PipelineOrchestrator:
                         if since_date < MIN_DATA_DATE:
                             logger.warning(f"[PIPELINE] since_date ({since_date.isoformat()}) is before minimum data date ({MIN_DATA_DATE.isoformat()}), clamping to {MIN_DATA_DATE.date()}")
                             # #region agent log
-                            _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"orchestrator.py:125","message":"Clamping since_date to MIN_DATA_DATE (before)
+#                             _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"orchestrator.py:125","message":"Clamping since_date to MIN_DATA_DATE (before) # FIXME: Incomplete debug log call - commented out for production
                             # #endregion
                             since_date = MIN_DATA_DATE
                         elif since_date > MIN_DATA_DATE and since_date.year >= 2026:
@@ -153,17 +153,17 @@ class PipelineOrchestrator:
                             # This handles corrupted metadata or system clock issues
                             logger.warning(f"[PIPELINE] since_date ({since_date.isoformat()}) is in 2026+, forcing to minimum data date ({MIN_DATA_DATE.date()}) to fetch 2025+ grants")
                             # #region agent log
-                            _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"orchestrator.py:133","message":"Forcing since_date to MIN_DATA_DATE (2026+ detected)
+#                             _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"orchestrator.py:133","message":"Forcing since_date to MIN_DATA_DATE (2026+ detected) # FIXME: Incomplete debug log call - commented out for production
                             # #endregion
                             since_date = MIN_DATA_DATE
                         else:
                             logger.info(f"[PIPELINE] Incremental fetch for {source} since {since_date.isoformat()}")
                             # #region agent log
-                            _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"orchestrator.py:140","message":"Using since_date as-is (passed validation)
+#                             _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"orchestrator.py:140","message":"Using since_date as-is (passed validation) # FIXME: Incomplete debug log call - commented out for production
                             # #endregion
                         
                         # #region agent log
-                        _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"orchestrator.py:143","message":"Final since_date after all checks","data":{"final_since_date":since_date.isoformat()
+                        _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"orchestrator.py:143","message":"Final since_date after all checks","data":{"final_since_date":since_date.isoformat()},"timestamp":int(datetime.now().timestamp()*1000)})
                         # #endregion
                     
                     # Step 1: Fetch raw grants with optional date filter
@@ -188,7 +188,7 @@ class PipelineOrchestrator:
                         logger.info(f"[PIPELINE] Starting to fetch grants from {source}...")
                         raw_grants = await self._fetch_grants(source, since_date)
                         # #region agent log
-                        _safe_debug_log({"runId":"debug","hypothesisId":"E","location":"orchestrator.py:125","message":"After _fetch_grants","data":{"raw_grants_count":len(raw_grants)
+                        _safe_debug_log({"runId":"debug","hypothesisId":"E","location":"orchestrator.py:125","message":"After _fetch_grants","data":{"raw_grants_count":len(raw_grants),"source":source,"since_date":since_date.isoformat() if since_date else None},"timestamp":int(datetime.now().timestamp()*1000)})
                         # #endregion
                         logger.info(f"[PIPELINE] Fetched {len(raw_grants)} raw grants from {source}")
                         
@@ -226,11 +226,11 @@ class PipelineOrchestrator:
                         
                         # Step 2: Clean and normalize
                         # #region agent log
-                        _safe_debug_log({"runId":"debug","hypothesisId":"B","location":"orchestrator.py:161","message":"Before _clean_grants","data":{"raw_grants_count":len(raw_grants)
+                        _safe_debug_log({"runId":"debug","hypothesisId":"B","location":"orchestrator.py:161","message":"Before _clean_grants","data":{"raw_grants_count":len(raw_grants),"source":source},"timestamp":int(datetime.now().timestamp()*1000)})
                         # #endregion
                         cleaned_grants = await self._clean_grants(raw_grants, source, run_id=run_id)
                         # #region agent log
-                        _safe_debug_log({"runId":"debug","hypothesisId":"B","location":"orchestrator.py:163","message":"After _clean_grants","data":{"cleaned_grants_count":len(cleaned_grants)
+                        _safe_debug_log({"runId":"debug","hypothesisId":"B","location":"orchestrator.py:163","message":"After _clean_grants","data":{"cleaned_grants_count":len(cleaned_grants),"raw_grants_count":len(raw_grants),"source":source},"timestamp":int(datetime.now().timestamp()*1000)})
                         # #endregion
                         logger.info(f"[PIPELINE] Cleaned {len(cleaned_grants)} grants from {source}")
                         
@@ -250,7 +250,7 @@ class PipelineOrchestrator:
                             cleaned_grants, source, run_id, total_fetched=len(raw_grants)
                         )
                         # #region agent log
-                        _safe_debug_log({"runId":"debug","hypothesisId":"G","location":"orchestrator.py:245","message":"After _save_grants returned","data":{"saved_count":saved_count,"quarantined_count":quarantined_count,"records_new":records_new,"records_existing":records_existing,"records_enriched":records_enriched,"cleaned_grants_count":len(cleaned_grants)
+                        _safe_debug_log({"runId":"debug","hypothesisId":"G","location":"orchestrator.py:245","message":"After _save_grants returned","data":{"saved_count":saved_count,"quarantined_count":quarantined_count,"records_new":records_new,"records_existing":records_existing,"records_enriched":records_enriched,"cleaned_grants_count":len(cleaned_grants)},"timestamp":int(datetime.now().timestamp()*1000)})
                         # #endregion
                         logger.info(
                             f"[PIPELINE] Saved {saved_count} grants (new: {records_new}, existing: {records_existing}, enriched: {records_enriched}), "
@@ -305,11 +305,11 @@ class PipelineOrchestrator:
                             # Only classify grants that were actually saved (not deduplicated)
                             # This is awaited, so it will complete before we set status to "completed"
                             # #region agent log
-                            _safe_debug_log({"runId":"debug","hypothesisId":"D","location":"orchestrator.py:227","message":"Before _classify_grants","data":{"cleaned_grants_count":len(cleaned_grants)
+#                             _safe_debug_log({"runId":"debug","hypothesisId":"D","location":"orchestrator.py:227","message":"Before _classify_grants","data":{"cleaned_grants_count":len(cleaned_grants) # FIXME: Incomplete debug log call - commented out for production
                             # #endregion
                             classified_count = await self._classify_grants(cleaned_grants)
                             # #region agent log
-                            _safe_debug_log({"runId":"debug","hypothesisId":"D","location":"orchestrator.py:229","message":"After _classify_grants","data":{"classified_count":classified_count,"cleaned_grants_count":len(cleaned_grants)
+#                             _safe_debug_log({"runId":"debug","hypothesisId":"D","location":"orchestrator.py:229","message":"After _classify_grants","data":{"classified_count":classified_count,"cleaned_grants_count":len(cleaned_grants) # FIXME: Incomplete debug log call - commented out for production
                             # #endregion
                             logger.info(f"[PIPELINE] Classified {classified_count} grants from {source}")
                         
@@ -355,7 +355,7 @@ class PipelineOrchestrator:
                         # Final status update - only set to completed after everything is truly done
                         # This is the LAST update, after all stages (fetch, clean, save, classify) are complete
                         # #region agent log
-                        _safe_debug_log({"runId":"debug","hypothesisId":"C","location":"orchestrator.py:258","message":"Setting final status","data":{"final_status":final_status,"raw_grants_count":len(raw_grants)
+#                         _safe_debug_log({"runId":"debug","hypothesisId":"C","location":"orchestrator.py:258","message":"Setting final status","data":{"final_status":final_status,"raw_grants_count":len(raw_grants) # FIXME: Incomplete debug log call - commented out for production
                         # #endregion
                         self._update_pipeline_run(
                             run_id,
@@ -446,17 +446,17 @@ class PipelineOrchestrator:
                 # CRITICAL FIX: Ensure min_date is not in the future
                 now_utc = datetime.now(timezone.utc)
                 # #region agent log
-                _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"orchestrator.py:347","message":"Checking min_date for future date","data":{"min_date":min_date,"now_utc":now_utc.isoformat()
+#                 _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"orchestrator.py:347","message":"Checking min_date for future date","data":{"min_date":min_date,"now_utc":now_utc.isoformat() # FIXME: Incomplete debug log call - commented out for production
                 # #endregion
                 min_date_obj = datetime.strptime(min_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
                 if min_date_obj > now_utc:
                     logger.warning(f"[PIPELINE] min_date is in the future ({min_date}), using default 2025-01-01")
                     # #region agent log
-                    _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"orchestrator.py:352","message":"Rejecting future min_date","data":{"min_date":min_date,"min_date_obj":min_date_obj.isoformat()
+#                     _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"orchestrator.py:352","message":"Rejecting future min_date","data":{"min_date":min_date,"min_date_obj":min_date_obj.isoformat() # FIXME: Incomplete debug log call - commented out for production
                     # #endregion
                     min_date = "2025-01-01"
                     # #region agent log
-                    _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"orchestrator.py:355","message":"Adjusted min_date after future date rejection","data":{"new_min_date":min_date},"timestamp":int(datetime.now()
+#                     _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"orchestrator.py:355","message":"Adjusted min_date after future date rejection","data":{"new_min_date":min_date},"timestamp":int(datetime.now() # FIXME: Incomplete debug log call - commented out for production
                     # #endregion
                 
                 logger.info(f"[PIPELINE] Calling OpenCanadaAdapter.fetch_grants with min_date={min_date}, max_records=5000")
@@ -595,13 +595,13 @@ class PipelineOrchestrator:
                 
                 # #region agent log - sample every 100th record to see what's being filtered
                 if idx % 100 == 0 or idx < 10:
-                    _safe_debug_log({"runId":"debug","hypothesisId":"B","location":"orchestrator.py:580","message":"Processing raw grant","data":{"idx":idx,"total":len(raw_grants)
+#                     _safe_debug_log({"runId":"debug","hypothesisId":"B","location":"orchestrator.py:580","message":"Processing raw grant","data":{"idx":idx,"total":len(raw_grants) # FIXME: Incomplete debug log call - commented out for production
                 # #endregion
                 
                 # Filter out records where recipient is actually an amount string
                 if recipient_cleaned and recipient_cleaned.startswith("$"):
                     # #region agent log
-                    _safe_debug_log({"runId":"debug","hypothesisId":"B","location":"orchestrator.py:592","message":"Skipping record - recipient is amount","data":{"recipient_cleaned":recipient_cleaned[:50],"source_record_id":raw.source_record_id},"timestamp":int(datetime.now()
+#                     _safe_debug_log({"runId":"debug","hypothesisId":"B","location":"orchestrator.py:592","message":"Skipping record - recipient is amount","data":{"recipient_cleaned":recipient_cleaned[:50],"source_record_id":raw.source_record_id},"timestamp":int(datetime.now() # FIXME: Incomplete debug log call - commented out for production
                     # #endregion
                     logger.debug(f"Skipping record where recipient is amount: {recipient_cleaned}")
                     all_flags.append("recipient_is_amount")
@@ -774,7 +774,7 @@ class PipelineOrchestrator:
                                 file_line = tb_lines[i].strip() + " -> " + tb_lines[i+1].strip()
                                 break
                     
-                    _safe_debug_log({"runId":"debug","hypothesisId":"B","location":"orchestrator.py:732","message":"Error cleaning grant","data":{"error_count":error_count,"error":str(e)
+#                     _safe_debug_log({"runId":"debug","hypothesisId":"B","location":"orchestrator.py:732","message":"Error cleaning grant","data":{"error_count":error_count,"error":str(e) # FIXME: Incomplete debug log call - commented out for production
                 # #endregion
                 logger.warning(f"Error cleaning grant (source_record_id: {raw.source_record_id if raw else 'unknown'}): {e}")
                 logger.warning(f"Traceback: {error_details.split(chr(10))[-3]}")  # Show last meaningful line
@@ -782,7 +782,7 @@ class PipelineOrchestrator:
                 continue
         
         # #region agent log
-        _safe_debug_log({"runId":"debug","hypothesisId":"B","location":"orchestrator.py:742","message":"Cleaning summary","data":{"total_raw":len(raw_grants)
+#         _safe_debug_log({"runId":"debug","hypothesisId":"B","location":"orchestrator.py:742","message":"Cleaning summary","data":{"total_raw":len(raw_grants) # FIXME: Incomplete debug log call - commented out for production
         # #endregion
         
         cleaning_report.total_clean = len(cleaned)
@@ -1028,7 +1028,7 @@ class PipelineOrchestrator:
                 new_grants.append(grant)
         
         # #region agent log
-        _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:971","message":"After deduplication check","data":{"unique_grants_count":len(unique_grants)
+#         _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:971","message":"After deduplication check","data":{"unique_grants_count":len(unique_grants) # FIXME: Incomplete debug log call - commented out for production
         # #endregion
         
         if skipped_existing > 0:
@@ -1051,44 +1051,45 @@ class PipelineOrchestrator:
                     records_enriched=0,
                 )
                 # #region agent log
-                _safe_debug_log({"runId":"debug","hypothesisId":"J","location":"orchestrator.py:1033","message":"Initial progress update for all-existing case","data":{"update_grants_count":len(update_grants)
+#                 _safe_debug_log({"runId":"debug","hypothesisId":"J","location":"orchestrator.py:1033","message":"Initial progress update for all-existing case","data":{"update_grants_count":len(update_grants) # FIXME: Incomplete debug log call - commented out for production
                 # #endregion
             except Exception as e:
                 # #region agent log
-                _safe_debug_log({"runId":"debug","hypothesisId":"J","location":"orchestrator.py:1045","message":"Error in initial progress update","data":{"error":str(e)
+#                 _safe_debug_log({"runId":"debug","hypothesisId":"J","location":"orchestrator.py:1045","message":"Error in initial progress update","data":{"error":str(e) # FIXME: Incomplete debug log call - commented out for production
                 # #endregion
                 pass
         
         # --- Insert new records ---
         records_new = 0
         # #region agent log
-        _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1029","message":"Starting to process new_grants","data":{"new_grants_count":len(new_grants)
+#         _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1029","message":"Starting to process new_grants","data":{"new_grants_count":len(new_grants) # FIXME: Incomplete debug log call - commented out for production
         # #endregion
         for idx, grant in enumerate(new_grants):
             # #region agent log
             if idx % 500 == 0 or idx == len(new_grants) - 1:
-                _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1034","message":"Processing grant in loop","data":{"idx":idx,"total":len(new_grants)
+#                 _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1034","message":"Processing grant in loop","data":{"idx":idx,"total":len(new_grants) # FIXME: Incomplete debug log call - commented out for production
             # #endregion
             try:
                 # Validate and add quality flags
                 quality_flags = self._validate_grant(grant)
                 grant["quality_flags"] = quality_flags
+                pass  # Placeholder to fix indentation
                 
                 # #region agent log
-                _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:990","message":"Quality flags generated","data":{"quality_flags":quality_flags,"recipient_name":grant.get("recipient_name","")
+#                 _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:990","message":"Quality flags generated","data":{"quality_flags":quality_flags,"recipient_name":grant.get("recipient_name","") # FIXME: Incomplete debug log call - commented out for production
                 # #endregion
                 
                 # Check if record should be quarantined based on flags
                 should_quarantine_record, quarantine_reason = should_quarantine(quality_flags)
                 
                 # #region agent log
-                _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:997","message":"Quarantine check result","data":{"should_quarantine":should_quarantine_record,"quarantine_reason":quarantine_reason,"quality_flags":quality_flags,"quarantine_flags_count":len([f for f in quality_flags if f in ["missing_recipient","missing_department","date_parse_failed","date_missing","amount_parse_failed","insufficient_data"]])
+#                 _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:997","message":"Quarantine check result","data":{"should_quarantine":should_quarantine_record,"quarantine_reason":quarantine_reason,"quality_flags":quality_flags,"quarantine_flags_count":len([f for f in quality_flags if f in ["missing_recipient","missing_department","date_parse_failed","date_missing","amount_parse_failed","insufficient_data"]]) # FIXME: Incomplete debug log call - commented out for production
                 # #endregion
                 
                 if should_quarantine_record:
                     # Send to quarantine queue
                     # #region agent log
-                    _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1001","message":"Quarantining grant","data":{"quarantine_reason":quarantine_reason,"quality_flags":quality_flags,"quarantined_count":quarantined_count+1},"timestamp":int(datetime.now()
+#                     _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1001","message":"Quarantining grant","data":{"quarantine_reason":quarantine_reason,"quality_flags":quality_flags,"quarantined_count":quarantined_count+1},"timestamp":int(datetime.now() # FIXME: Incomplete debug log call - commented out for production
                     # #endregion
                     quarantine_data = {
                         "source": source,
@@ -1124,17 +1125,17 @@ class PipelineOrchestrator:
                         procurement_signal_data[field] = safe_grant.pop(field)
                 
                 # #region agent log
-                _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1022","message":"Attempting to insert grant","data":{"dedup_hash":grant.get("dedup_hash")
+#                 _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1022","message":"Attempting to insert grant","data":{"dedup_hash":grant.get("dedup_hash") # FIXME: Incomplete debug log call - commented out for production
                 # #endregion
                 
                 # #region agent log
-                _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1027","message":"About to execute insert","data":{"grant_keys":list(safe_grant.keys()
+#                 _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1027","message":"About to execute insert","data":{"grant_keys":list(safe_grant.keys() # FIXME: Incomplete debug log call - commented out for production
                 # #endregion
                 
                 try:
                     result = self.supabase.table("grant_records").insert(safe_grant).execute()
                     # #region agent log
-                    _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1051","message":"Insert execute()
+#                     _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1051","message":"Insert execute() # FIXME: Incomplete debug log call - commented out for production
                     # #endregion
                     
                     # If insert succeeded, try to update with procurement signal fields (if columns exist)
@@ -1147,12 +1148,12 @@ class PipelineOrchestrator:
                                 if update_data:
                                     self.supabase.table("grant_records").update(update_data).eq("id", inserted_id).execute()
                                     # #region agent log
-                                    _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1062","message":"Updated procurement signal fields","data":{"inserted_id":str(inserted_id)
+#                                     _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1062","message":"Updated procurement signal fields","data":{"inserted_id":str(inserted_id) # FIXME: Incomplete debug log call - commented out for production
                                     # #endregion
                             except Exception as update_error:
                                 # Columns might not exist - that's okay, log and continue
                                 # #region agent log
-                                _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1069","message":"Could not update procurement signal fields (columns may not exist)
+#                                 _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1069","message":"Could not update procurement signal fields (columns may not exist) # FIXME: Incomplete debug log call - commented out for production
                                 # #endregion
                                 logger.debug(f"Could not update procurement signal fields (columns may not exist): {update_error}")
                     
@@ -1160,7 +1161,7 @@ class PipelineOrchestrator:
                     records_new += 1
                     total_processed += 1  # Increment total processed (new + existing)
                     # #region agent log
-                    _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1077","message":"Successfully inserted grant","data":{"saved_count":saved_count,"records_new":records_new,"total_processed":total_processed},"timestamp":int(datetime.now()
+#                     _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1077","message":"Successfully inserted grant","data":{"saved_count":saved_count,"records_new":records_new,"total_processed":total_processed},"timestamp":int(datetime.now() # FIXME: Incomplete debug log call - commented out for production
                     # #endregion
                     
                     # Update progress every 50 grants OR every 5 seconds (whichever comes first) to keep UI responsive
@@ -1175,7 +1176,7 @@ class PipelineOrchestrator:
                     )
                     if should_update:
                         # #region agent log
-                        _safe_debug_log({"runId":"debug","hypothesisId":"H","location":"orchestrator.py:1152","message":"About to update progress","data":{"saved_count":saved_count,"total_processed_now":total_processed_now,"skipped_existing":skipped_existing,"len_unique_grants":len(unique_grants)
+#                         _safe_debug_log({"runId":"debug","hypothesisId":"H","location":"orchestrator.py:1152","message":"About to update progress","data":{"saved_count":saved_count,"total_processed_now":total_processed_now,"skipped_existing":skipped_existing,"len_unique_grants":len(unique_grants) # FIXME: Incomplete debug log call - commented out for production
                         # #endregion
                         try:
                             # Update records_cleaned to show total processed (new + existing) for accurate progress
@@ -1194,30 +1195,30 @@ class PipelineOrchestrator:
                             )
                             self._last_progress_update_time = current_time  # Track last update time
                             # #region agent log
-                            _safe_debug_log({"runId":"debug","hypothesisId":"H","location":"orchestrator.py:1170","message":"Progress update completed successfully","data":{"saved_count":saved_count,"total_processed_now":total_processed_now,"records_cleaned":total_processed_now},"timestamp":int(datetime.now()
+#                             _safe_debug_log({"runId":"debug","hypothesisId":"H","location":"orchestrator.py:1170","message":"Progress update completed successfully","data":{"saved_count":saved_count,"total_processed_now":total_processed_now,"records_cleaned":total_processed_now},"timestamp":int(datetime.now() # FIXME: Incomplete debug log call - commented out for production
                             # #endregion
                         except Exception as update_error:
                             # Don't fail the save process if progress update fails
                             # #region agent log
-                            _safe_debug_log({"runId":"debug","hypothesisId":"H","location":"orchestrator.py:1167","message":"Error updating progress","data":{"error":str(update_error)
+#                             _safe_debug_log({"runId":"debug","hypothesisId":"H","location":"orchestrator.py:1167","message":"Error updating progress","data":{"error":str(update_error) # FIXME: Incomplete debug log call - commented out for production
                             # #endregion
                             logger.debug(f"Error updating progress: {update_error}")
                 except Exception as insert_error:
                     error_str = str(insert_error).lower()
                     # #region agent log
-                    _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1043","message":"Exception during insert.execute()
+#                     _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1043","message":"Exception during insert.execute() # FIXME: Incomplete debug log call - commented out for production
                     # #endregion
                     if "duplicate key" in error_str or "unique" in error_str or "duplicate" in error_str:
                         # Race condition — another process inserted it, treat as existing
                         # #region agent log
-                        _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1049","message":"Duplicate key - adding to update_grants","data":{},"timestamp":int(datetime.now()
+#                         _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1049","message":"Duplicate key - adding to update_grants","data":{},"timestamp":int(datetime.now() # FIXME: Incomplete debug log call - commented out for production
                         # #endregion
                         update_grants.append(grant)
                         continue
                     logger.warning(f"Error saving grant: {insert_error}")
                     # Quarantine on error
                     # #region agent log
-                    _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1057","message":"Quarantining due to insert error","data":{"error":str(insert_error)
+#                     _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1057","message":"Quarantining due to insert error","data":{"error":str(insert_error) # FIXME: Incomplete debug log call - commented out for production
                     # #endregion
                     try:
                         quarantine_data = {
@@ -1232,14 +1233,14 @@ class PipelineOrchestrator:
                         quarantined_count += 1
                     except Exception as quarantine_error:
                         # #region agent log
-                        _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1067","message":"Failed to quarantine (quarantine insert also failed)
+#                         _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1067","message":"Failed to quarantine (quarantine insert also failed) # FIXME: Incomplete debug log call - commented out for production
                         # #endregion
                         pass
             except Exception as e:
                 # Outer exception handler for validation/quarantine check errors
                 error_str = str(e).lower()
                 # #region agent log
-                _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1073","message":"Outer exception handler","data":{"error":str(e)
+#                 _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1073","message":"Outer exception handler","data":{"error":str(e) # FIXME: Incomplete debug log call - commented out for production
                 # #endregion
                 logger.error(f"Unexpected error processing grant: {e}")
                 import traceback
@@ -1248,7 +1249,7 @@ class PipelineOrchestrator:
         # --- Upsert existing records (update if new data is richer) ---
         updated_count = 0
         # #region agent log
-        _safe_debug_log({"runId":"debug","hypothesisId":"I","location":"orchestrator.py:1258","message":"Starting to process update_grants","data":{"update_grants_count":len(update_grants)
+#         _safe_debug_log({"runId":"debug","hypothesisId":"I","location":"orchestrator.py:1258","message":"Starting to process update_grants","data":{"update_grants_count":len(update_grants) # FIXME: Incomplete debug log call - commented out for production
         # #endregion
         for idx, grant in enumerate(update_grants):
             # Update progress every 50 grants OR every 5 seconds for existing records too
@@ -1278,11 +1279,11 @@ class PipelineOrchestrator:
                     )
                     self._last_progress_update_time = current_time
                     # #region agent log
-                    _safe_debug_log({"runId":"debug","hypothesisId":"I","location":"orchestrator.py:1235","message":"Progress update for existing records","data":{"total_processed_so_far":total_processed_so_far,"existing_processed":existing_processed,"saved_count":saved_count},"timestamp":int(datetime.now()
+#                     _safe_debug_log({"runId":"debug","hypothesisId":"I","location":"orchestrator.py:1235","message":"Progress update for existing records","data":{"total_processed_so_far":total_processed_so_far,"existing_processed":existing_processed,"saved_count":saved_count},"timestamp":int(datetime.now() # FIXME: Incomplete debug log call - commented out for production
                     # #endregion
                 except Exception as e:
                     # #region agent log
-                    _safe_debug_log({"runId":"debug","hypothesisId":"I","location":"orchestrator.py:1248","message":"Error updating progress for existing records","data":{"error":str(e)
+#                     _safe_debug_log({"runId":"debug","hypothesisId":"I","location":"orchestrator.py:1248","message":"Error updating progress for existing records","data":{"error":str(e) # FIXME: Incomplete debug log call - commented out for production
                     # #endregion
                     pass  # Don't fail if progress update fails
             
@@ -1326,7 +1327,7 @@ class PipelineOrchestrator:
                     records_with_issues += 1
         
         # #region agent log
-        _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1216","message":"_save_grants returning","data":{"saved_count":saved_count,"quarantined_count":quarantined_count,"records_new":saved_count,"records_existing":skipped_existing,"records_enriched":updated_count,"new_grants_count":len(new_grants)
+#         _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1216","message":"_save_grants returning","data":{"saved_count":saved_count,"quarantined_count":quarantined_count,"records_new":saved_count,"records_existing":skipped_existing,"records_enriched":updated_count,"new_grants_count":len(new_grants) # FIXME: Incomplete debug log call - commented out for production
         # #endregion
         return saved_count, quarantined_count, saved_count, skipped_existing, updated_count
     
@@ -1727,7 +1728,7 @@ class PipelineOrchestrator:
             runs = self.supabase.table("pipeline_runs").select("*").execute()
             
             # #region agent log
-            _safe_debug_log({"runId":"debug","hypothesisId":"H","location":"orchestrator.py:1649","message":"_update_pipeline_run: searching for run","data":{"run_id":run_id,"source":source,"total_runs":len(runs.data)
+#             _safe_debug_log({"runId":"debug","hypothesisId":"H","location":"orchestrator.py:1649","message":"_update_pipeline_run: searching for run","data":{"run_id":run_id,"source":source,"total_runs":len(runs.data) # FIXME: Incomplete debug log call - commented out for production
             # #endregion
             
             # Find the run with matching source in sources array and parent_run_id
@@ -1739,24 +1740,24 @@ class PipelineOrchestrator:
                 if source in sources_list and parent_run_id == run_id:
                     found_run = run
                     # #region agent log
-                    _safe_debug_log({"runId":"debug","hypothesisId":"H","location":"orchestrator.py:1656","message":"_update_pipeline_run: found matching run","data":{"run_id":run_id,"source":source,"found_run_id":run["id"],"records_cleaned":records_cleaned,"update_data":update_data},"timestamp":int(datetime.now()
+#                     _safe_debug_log({"runId":"debug","hypothesisId":"H","location":"orchestrator.py:1656","message":"_update_pipeline_run: found matching run","data":{"run_id":run_id,"source":source,"found_run_id":run["id"],"records_cleaned":records_cleaned,"update_data":update_data},"timestamp":int(datetime.now() # FIXME: Incomplete debug log call - commented out for production
                     # #endregion
                     result = self.supabase.table("pipeline_runs").update(update_data).eq(
                         "id", run["id"]
                     ).execute()
                     # #region agent log
-                    _safe_debug_log({"runId":"debug","hypothesisId":"H","location":"orchestrator.py:1662","message":"_update_pipeline_run: update executed","data":{"run_id":run_id,"found_run_id":run["id"],"result_count":len(result.data)
+#                     _safe_debug_log({"runId":"debug","hypothesisId":"H","location":"orchestrator.py:1662","message":"_update_pipeline_run: update executed","data":{"run_id":run_id,"found_run_id":run["id"],"result_count":len(result.data) # FIXME: Incomplete debug log call - commented out for production
                     # #endregion
                     break
             
             if not found_run:
                 # #region agent log
-                _safe_debug_log({"runId":"debug","hypothesisId":"H","location":"orchestrator.py:1668","message":"_update_pipeline_run: no matching run found","data":{"run_id":run_id,"source":source,"total_runs":len(runs.data)
+#                 _safe_debug_log({"runId":"debug","hypothesisId":"H","location":"orchestrator.py:1668","message":"_update_pipeline_run: no matching run found","data":{"run_id":run_id,"source":source,"total_runs":len(runs.data) # FIXME: Incomplete debug log call - commented out for production
                 # #endregion
                 logger.warning(f"Could not find pipeline run to update: run_id={run_id}, source={source}")
             
         except Exception as e:
             # #region agent log
-            _safe_debug_log({"runId":"debug","hypothesisId":"H","location":"orchestrator.py:1675","message":"_update_pipeline_run: exception","data":{"error":str(e)
+#             _safe_debug_log({"runId":"debug","hypothesisId":"H","location":"orchestrator.py:1675","message":"_update_pipeline_run: exception","data":{"error":str(e) # FIXME: Incomplete debug log call - commented out for production
             # #endregion
             logger.error(f"Error updating pipeline run: {e}")
