@@ -595,7 +595,8 @@ class PipelineOrchestrator:
                 
                 # #region agent log - sample every 100th record to see what's being filtered
                 if idx % 100 == 0 or idx < 10:
-#                     _safe_debug_log({"runId":"debug","hypothesisId":"B","location":"orchestrator.py:580","message":"Processing raw grant","data":{"idx":idx,"total":len(raw_grants) # FIXME: Incomplete debug log call - commented out for production
+                    # _safe_debug_log({"runId":"debug","hypothesisId":"B","location":"orchestrator.py:580","message":"Processing raw grant","data":{"idx":idx,"total":len(raw_grants)},"timestamp":int(datetime.now().timestamp()*1000)}) # Commented out for production
+                    pass
                 # #endregion
                 
                 # Filter out records where recipient is actually an amount string
