@@ -35,16 +35,6 @@ export default function SignalCard({ signal }: SignalCardProps) {
     return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
   };
 
-  const calculateProgress = () => {
-    if (!signal.predicted_rfp_window_start || !signal.predicted_rfp_window_end) return 0;
-    const start = new Date(signal.predicted_rfp_window_start).getTime();
-    const end = new Date(signal.predicted_rfp_window_end).getTime();
-    const now = Date.now();
-    if (now < start) return 0;
-    if (now > end) return 100;
-    return ((now - start) / (end - start)) * 100;
-  };
-
   const confidence = signal.confidence_score ? Math.round(signal.confidence_score * 100) : 0;
 
   return (
