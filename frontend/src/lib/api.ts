@@ -1,8 +1,8 @@
-// API Base URL: in production (browser on Vercel) use same-origin so Next.js rewrites to Railway.
-// NEXT_PUBLIC_API_URL must be set in Vercel at build time for rewrites to work.
+// In production (browser on Vercel) we call our own /api/proxy, which fetches from Railway at request time.
+// Set NEXT_PUBLIC_API_URL or API_URL in Vercel to your Railway backend URL.
 function getApiBaseUrl(): string {
   if (typeof window !== "undefined" && !window.location.origin.includes("localhost")) {
-    return ""; // same-origin → Next.js rewrites /api/* and /health to Railway
+    return "/api/proxy"; // server-side proxy reads backend URL from env at request time
   }
   return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 }

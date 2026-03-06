@@ -92,8 +92,8 @@ export default function Dashboard() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         {overviewError && (
           <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm">
-            <strong>Could not load data from the API.</strong> If this is the deployed site, set{" "}
-            <code className="bg-amber-100 px-1 rounded">NEXT_PUBLIC_API_URL</code> to your Railway backend URL in Vercel (Settings → Environment Variables) and <strong>redeploy</strong>.
+            <strong>Could not load data from the API.</strong> Set{" "}
+            <code className="bg-amber-100 px-1 rounded">NEXT_PUBLIC_API_URL</code> or <code className="bg-amber-100 px-1 rounded">API_URL</code> to your Railway backend URL in Vercel (Settings → Environment Variables) and redeploy.
           </div>
         )}
         {/* Stats Bar */}
