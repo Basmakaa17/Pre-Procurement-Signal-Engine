@@ -273,7 +273,7 @@ class OpenCanadaAdapter:
             f"(pages={page_num}, min_date={min_date})"
         )
         # #region agent log
-        _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"open_canada.py:237","message":"Adapter fetch_grants completed","data":{"total_records":len(all_records)
+        _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"open_canada.py:237","message":"Adapter fetch_grants completed","data":{"total_records":len(all_records),"max_records":max_records,"min_date":min_date.isoformat() if min_date else None},"timestamp":int(datetime.now().timestamp()*1000)})
         # #endregion
         return all_records
 
