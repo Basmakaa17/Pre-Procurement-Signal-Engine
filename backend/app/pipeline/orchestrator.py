@@ -1068,13 +1068,13 @@ class PipelineOrchestrator:
         for idx, grant in enumerate(new_grants):
             # #region agent log
             if idx % 500 == 0 or idx == len(new_grants) - 1:
-#                 _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1034","message":"Processing grant in loop","data":{"idx":idx,"total":len(new_grants) # FIXME: Incomplete debug log call - commented out for production
+#                 _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1034","message":"Processing grant in loop","data":{"idx":idx,"total":len(new_grants)},"timestamp":int(datetime.now().timestamp()*1000)}) # Commented out for production
             # #endregion
+            
             try:
                 # Validate and add quality flags
                 quality_flags = self._validate_grant(grant)
                 grant["quality_flags"] = quality_flags
-                pass  # Placeholder to fix indentation
                 
                 # #region agent log
 #                 _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:990","message":"Quality flags generated","data":{"quality_flags":quality_flags,"recipient_name":grant.get("recipient_name","") # FIXME: Incomplete debug log call - commented out for production
