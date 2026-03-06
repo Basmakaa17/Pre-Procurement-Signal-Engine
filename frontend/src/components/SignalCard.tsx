@@ -91,21 +91,6 @@ export default function SignalCard({ signal }: SignalCardProps) {
         </div>
       </div>
 
-      {/* Progress Bar */}
-      {signal.predicted_rfp_window_start && signal.predicted_rfp_window_end && (
-        <div className="mb-4">
-          <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-[#634086] transition-all"
-              style={{ width: `${calculateProgress()}%` }}
-            />
-          </div>
-          <div className="text-xs text-gray-500 mt-1 font-mono">
-            {calculateProgress().toFixed(0)}% through forecast window
-          </div>
-        </div>
-      )}
-
       {/* Procurement Category */}
       <div className="flex items-center gap-2 mb-4">
         <svg className="w-4 h-4 text-[#634086]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
