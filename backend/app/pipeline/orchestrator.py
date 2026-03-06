@@ -1068,7 +1068,8 @@ class PipelineOrchestrator:
         for idx, grant in enumerate(new_grants):
             # #region agent log
             if idx % 500 == 0 or idx == len(new_grants) - 1:
-#                 _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1034","message":"Processing grant in loop","data":{"idx":idx,"total":len(new_grants)},"timestamp":int(datetime.now().timestamp()*1000)}) # Commented out for production
+                # _safe_debug_log({"runId":"debug","hypothesisId":"F","location":"orchestrator.py:1034","message":"Processing grant in loop","data":{"idx":idx,"total":len(new_grants)},"timestamp":int(datetime.now().timestamp()*1000)}) # Commented out for production
+                pass
             # #endregion
             
             try:
