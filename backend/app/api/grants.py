@@ -144,8 +144,10 @@ async def get_grant_stats(request: Request):
     try:
         supabase = get_supabase_client()
         
-        # Get all grants
-        all_grants = supabase.table("grant_records").select("*").execute()
+        # Get all grants (exclude noise from stats)
+        all_grants = supabase.table("grant_records").select("*").neq(
+            "procurement_signal_category", "noise"
+        ).eq("is_quarantined", False).execute()
         grants = all_grants.data
         
         # Calculate stats

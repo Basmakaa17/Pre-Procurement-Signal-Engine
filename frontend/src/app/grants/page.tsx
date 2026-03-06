@@ -312,6 +312,7 @@ export default function GrantsPage() {
   const [regionFilter, setRegionFilter] = useState("");
   const [themeFilter, setThemeFilter] = useState("");
   const [businessRelevanceFilter, setBusinessRelevanceFilter] = useState("all");
+  const [procurementSignalFilter, setProcurementSignalFilter] = useState("all");
   const [confidenceThreshold, setConfidenceThreshold] = useState(0);
   const [page, setPage] = useState(0);
   const [activeTab, setActiveTab] = useState("relevant"); // "relevant" or "non-relevant"
@@ -345,6 +346,7 @@ export default function GrantsPage() {
           regionFilter,
           themeFilter,
           relevanceForTab,
+          procurementSignalFilter,
           confidenceThreshold,
           page,
           activeTab,
@@ -356,6 +358,7 @@ export default function GrantsPage() {
         region: regionFilter || undefined,
         theme: themeFilter || undefined,
         businessRelevance: relevanceForTab,
+        procurementSignal: procurementSignalFilter !== "all" ? [procurementSignalFilter as 'high' | 'medium' | 'low' | 'noise'] : undefined,
         limit: pageSize,
         offset: page * pageSize,
       })
@@ -493,6 +496,24 @@ export default function GrantsPage() {
                   </select>
                 </div>
               )}
+
+              <div>
+                <label className="text-xs text-gray-500 mb-2 block">RFP Signal</label>
+                <select
+                  value={procurementSignalFilter}
+                  onChange={(e) => {
+                    setProcurementSignalFilter(e.target.value);
+                    setPage(0); // Reset pagination when filter changes
+                  }}
+                  className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700"
+                >
+                  <option value="all">All Signals</option>
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
+                  <option value="noise">Noise</option>
+                </select>
+              </div>
 
               <div>
                 <label className="text-xs text-gray-500 mb-2 block">

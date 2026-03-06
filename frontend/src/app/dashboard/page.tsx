@@ -43,7 +43,11 @@ export default function Dashboard() {
 
   const { data: grantsData, isLoading: grantsLoading } = useSWR(
     "recent-grants",
-    () => fetchGrants({ limit: 20, offset: 0 }),
+    () => fetchGrants({ 
+      limit: 20, 
+      offset: 0,
+      procurementSignal: ["high", "medium", "low"] // Exclude noise from dashboard
+    }),
     { refreshInterval: 60000 }
   );
 
