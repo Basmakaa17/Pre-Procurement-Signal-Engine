@@ -248,7 +248,7 @@ class OpenCanadaAdapter:
                     f"[OpenCanada] Hit max_records cap ({max_records}), stopping pagination."
                 )
                 # #region agent log
-                _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"open_canada.py:225","message":"Pagination stopped: max_records reached","data":{"page_num":page_num,"offset":offset,"all_records_count":len(all_records)
+                _safe_debug_log({"runId":"debug","hypothesisId":"A","location":"open_canada.py:225","message":"Pagination stopped: max_records reached","data":{"page_num":page_num,"offset":offset,"all_records_count":len(all_records),"max_records":max_records},"timestamp":int(datetime.now().timestamp()*1000)})
                 # #endregion
                 break
 
