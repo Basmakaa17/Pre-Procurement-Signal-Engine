@@ -1458,13 +1458,40 @@ class PipelineOrchestrator:
                         "grant_duration_months": duration_months,
                     }
 
-                    # For LOW/NOISE, set a default theme so they are not re-processed
+                    # For LOW/NOISE, set a default theme and calculate business relevance
                     if category in ("low", "noise"):
                         skipped_for_llm += 1
+                        
+                        # Calculate business relevance for LOW/NOISE grants too
+                        # This ensures consistency between procurement signal and business relevance
+                        relevance_category, relevance_score, relevance_reasons = calculate_business_relevance(
+                            description=g.get("description"),
+                            amount_cad=float(g["amount_cad"]) if g.get("amount_cad") else None,
+                            recipient_type=g.get("recipient_type"),
+                            funding_theme=None,  # Not classified yet
+                            issuer_canonical=g.get("issuer_canonical"),
+                        )
+                        
+                        # Align business relevance with procurement signal:
+                        # If procurement signal is low/noise, business relevance should be capped
+                        if category == "noise" and relevance_category == "high":
+                            # Noise signal + high relevance = inconsistency, cap at medium
+                            relevance_category = "medium"
+                            relevance_score = min(relevance_score, 0.65)
+                            relevance_reasons.append("capped:procurement_signal_noise")
+                        elif category == "low" and relevance_category == "high":
+                            # Low signal + high relevance = inconsistency, cap at medium
+                            relevance_category = "medium"
+                            relevance_score = min(relevance_score, 0.65)
+                            relevance_reasons.append("capped:procurement_signal_low")
+                        
                         update_fields.update({
                             "funding_theme": "Not Classified",
                             "llm_confidence": 0.0,
                             "llm_classified_at": datetime.now().isoformat(),
+                            "business_relevance": relevance_category,
+                            "business_relevance_score": relevance_score,
+                            "business_relevance_reasons": relevance_reasons,
                         })
 
                     try:
@@ -1558,6 +1585,20 @@ class PipelineOrchestrator:
                             funding_theme=classification.funding_theme,
                             issuer_canonical=grant_data.get("issuer_canonical"),
                         )
+                        
+                        # Align business relevance with procurement signal:
+                        # If procurement signal is low/noise, business relevance should be capped
+                        procurement_signal = grant_data.get("procurement_signal_category", "unknown")
+                        if procurement_signal == "noise" and relevance_category == "high":
+                            # Noise signal + high relevance = inconsistency, cap at medium
+                            relevance_category = "medium"
+                            relevance_score = min(relevance_score, 0.65)
+                            relevance_reasons.append("capped:procurement_signal_noise")
+                        elif procurement_signal == "low" and relevance_category == "high":
+                            # Low signal + high relevance = inconsistency, cap at medium
+                            relevance_category = "medium"
+                            relevance_score = min(relevance_score, 0.65)
+                            relevance_reasons.append("capped:procurement_signal_low")
 
                         # Generate RFP predictions
                         award_date_obj = None
